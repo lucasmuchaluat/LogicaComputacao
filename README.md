@@ -1,2 +1,2 @@
-# LogicaComputadores
-Repositório para disciplina Lógica de Computadores 2021.1
+# LogicaComputacao
+Repositório para disciplina Lógica da Computação 2021.1
