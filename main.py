@@ -1,4 +1,5 @@
 import sys
+import re
 
 
 class Token:
@@ -58,44 +59,60 @@ class Parser:
 
     @staticmethod
     def parseExpression():
-        operadores = ["PLUS", "MINUS", "TIMES", "OVER"]
-        if(Parser.tokens.actual.type == "INT"):
-            resultado = Parser.tokens.actual.value
-            Parser.tokens.selectNext()
-            while(Parser.tokens.actual.type in operadores):
-                if(Parser.tokens.actual.type == "PLUS"):
-                    Parser.tokens.selectNext()
-                    if(Parser.tokens.actual.type == "INT"):
-                        resultado += Parser.tokens.actual.value
-                    else:
-                        raise ValueError
-                elif(Parser.tokens.actual.type == "MINUS"):
-                    Parser.tokens.selectNext()
-                    if(Parser.tokens.actual.type == "INT"):
-                        resultado -= Parser.tokens.actual.value
-                    else:
-                        raise ValueError
-                elif(Parser.tokens.actual.type == "TIMES"):
-                    Parser.tokens.selectNext()
-                    if(Parser.tokens.actual.type == "INT"):
-                        resultado *= Parser.tokens.actual.value
-                    else:
-                        raise ValueError
-                elif(Parser.tokens.actual.type == "OVER"):
-                    Parser.tokens.selectNext()
-                    if(Parser.tokens.actual.type == "INT"):
-                        resultado /= Parser.tokens.actual.value
-                    else:
-                        raise ValueError
+        operadores = ["PLUS", "MINUS"]
+
+        resultTerm, token = Parser.parseTerm()
+        resultExpression = resultTerm
+
+        while(token.type in operadores):
+            if(token.type == "PLUS"):
+                resultTerm, token = Parser.parseTerm()
+                resultExpression += resultTerm
+            elif(token.type == "MINUS"):
+                resultTerm, token = Parser.parseTerm()
+                resultExpression -= resultTerm
+            else:
+                raise ValueError
+        return int(resultExpression)
+
+    @staticmethod
+    def parseTerm():
+        operadores = ["TIMES", "OVER"]
+
+        while(Parser.tokens.actual.type != "EOF"):
+            if(Parser.tokens.actual.type == "INT"):
+                resultado = Parser.tokens.actual.value
                 Parser.tokens.selectNext()
-            return int(resultado)
-        else:
-            raise ValueError
+                while(Parser.tokens.actual.type in operadores):
+                    if(Parser.tokens.actual.type == "TIMES"):
+                        Parser.tokens.selectNext()
+                        if(Parser.tokens.actual.type == "INT"):
+                            resultado *= Parser.tokens.actual.value
+                        else:
+                            raise ValueError
+                    elif(Parser.tokens.actual.type == "OVER"):
+                        Parser.tokens.selectNext()
+                        if(Parser.tokens.actual.type == "INT"):
+                            resultado /= Parser.tokens.actual.value
+                        else:
+                            raise ValueError
+                    Parser.tokens.selectNext()
+                return int(resultado), Parser.tokens.actual
+            else:
+                Parser.tokens.selectNext()
 
     @staticmethod
     def run(origin):
-        Parser.tokens = Tokenizer(origin)
+        Parser.tokens = Tokenizer(PrePro.filter(origin))
         return Parser.parseExpression()
+
+
+class PrePro:
+    @staticmethod
+    def filter(arg):
+        new_arg = re.sub(r"\/\*.*?\*\/", "", arg)
+        print(f"FILTRADO: {new_arg}")
+        return new_arg
 
 
 if __name__ == "__main__":
