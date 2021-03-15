@@ -12,7 +12,8 @@ python3 main.py "2+2"
 EBNF:
 
 ```
-EXPRESSION = NUMBER, {("+" | "-" | "*" | "/"), NUMBER} ; 
+EXPRESSION = TERM, {("+" | "-"), TERM} ;
+TERM = NUMBER, {("*" | "/"), NUMBER} ;
 ```
 
 O programa suporta o uso de comentários na expressão também. Para inserir um basta usar a seguinte notação:
