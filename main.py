@@ -111,7 +111,6 @@ class PrePro:
     @staticmethod
     def filter(arg):
         new_arg = re.sub(r"\/\*.*?\*\/", "", arg)
-        print(f"FILTRADO: {new_arg}")
         return new_arg
 
 
