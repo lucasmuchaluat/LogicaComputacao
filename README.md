@@ -13,11 +13,14 @@ EBNF:
 
 ```
 EXPRESSION = TERM, {("+" | "-"), TERM} ;
-TERM = NUMBER, {("*" | "/"), NUMBER} ;
+TERM = FACTOR, {("*" | "/"), FACTOR} ;
+FACTOR = ("+" | "-"), FACTOR | "(", EXPRESSION, ")" | NUMBER ; 
+NUMBER = DIGIT, {DIGIT} ;
+DIGIT = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 ;
 ```
 
-O programa suporta o uso de comentários na expressão também. Para inserir um basta usar a seguinte notação:
+Além de parênteses, o programa suporta o uso de comentários na expressão também. Para inserir um basta usar a seguinte notação:
 
 ```
-python3 main.py "11+22-33 /* comentário */"
+python3 main.py "(3+2)/5 /* comentário */"
 ```
