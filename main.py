@@ -26,30 +26,45 @@ class Tokenizer:
         origin += "#"
 
         for caracter in origin:
-            if not caracter == " ":
-                if(caracter.isdigit()):
-                    numero += caracter
-                elif(caracter == "+"):
+            if(caracter.isdigit()):
+                numero += caracter
+
+            elif(caracter == " "):
+                tokens_list.append(Token("INT", int(numero)))
+                numero = ""
+
+            elif(caracter == "+"):
+                if numero:
                     tokens_list.append(Token("INT", int(numero)))
-                    tokens_list.append(Token("PLUS", "+"))
                     numero = ""
-                elif(caracter == "-"):
+                tokens_list.append(Token("PLUS", "+"))
+
+            elif(caracter == "-"):
+                if numero:
                     tokens_list.append(Token("INT", int(numero)))
-                    tokens_list.append(Token("MINUS", "-"))
                     numero = ""
-                elif(caracter == "*"):
+                tokens_list.append(Token("MINUS", "-"))
+
+            elif(caracter == "*"):
+                if numero:
                     tokens_list.append(Token("INT", int(numero)))
-                    tokens_list.append(Token("TIMES", "*"))
                     numero = ""
-                elif(caracter == "/"):
+                tokens_list.append(Token("TIMES", "*"))
+
+            elif(caracter == "/"):
+                if numero:
                     tokens_list.append(Token("INT", int(numero)))
-                    tokens_list.append(Token("OVER", "/"))
                     numero = ""
-                elif(caracter == "#"):
+                tokens_list.append(Token("OVER", "/"))
+
+            elif(caracter == "#"):
+                if numero:
                     tokens_list.append(Token("INT", int(numero)))
-                    tokens_list.append(Token("EOF", "#"))
                     numero = ""
-                    break
+                tokens_list.append(Token("EOF", "#"))
+
+                break
+
         return tokens_list
 
 
@@ -73,7 +88,10 @@ class Parser:
                 resultExpression -= resultTerm
             else:
                 raise ValueError
-        return int(resultExpression)
+        if token.type == "EOF":
+            return int(resultExpression)
+        else:
+            raise ValueError
 
     @staticmethod
     def parseTerm():
