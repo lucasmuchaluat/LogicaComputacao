@@ -31,60 +31,59 @@ class Tokenizer:
                 numero += caracter
 
             elif(caracter == " "):
-              
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
 
-                elif(caracter == "+"):
-                    if numero:
-                        tokens_list.append(Token("INT", int(numero)))
-                        numero = ""
-                    tokens_list.append(Token("PLUS", "+"))
+            elif(caracter == "+"):
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                tokens_list.append(Token("PLUS", "+"))
 
-                elif(caracter == "-"):
-                    if numero:
-                        tokens_list.append(Token("INT", int(numero)))
-                        numero = ""
-                    tokens_list.append(Token("MINUS", "-"))
+            elif(caracter == "-"):
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                tokens_list.append(Token("MINUS", "-"))
 
-                elif(caracter == "*"):
-                    if numero:
-                        tokens_list.append(Token("INT", int(numero)))
-                        numero = ""
-                    tokens_list.append(Token("TIMES", "*"))
+            elif(caracter == "*"):
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                tokens_list.append(Token("TIMES", "*"))
 
-                elif(caracter == "/"):
-                    if numero:
-                        tokens_list.append(Token("INT", int(numero)))
-                        numero = ""
-                    tokens_list.append(Token("OVER", "/"))
+            elif(caracter == "/"):
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                tokens_list.append(Token("OVER", "/"))
 
-                elif(caracter == "("):
-                    countPar += 1
-                    if numero:
-                        tokens_list.append(Token("INT", int(numero)))
-                        numero = ""
-                    tokens_list.append(Token("LPAR", "("))
+            elif(caracter == "("):
+                countPar += 1
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                tokens_list.append(Token("LPAR", "("))
 
-                elif(caracter == ")"):
-                    countPar -= 1
-                    if countPar < 0:
-                        raise ValueError("Desbalanceamento de parenteses!")
-                    if numero:
-                        tokens_list.append(Token("INT", int(numero)))
-                        numero = ""
-                    tokens_list.append(Token("RPAR", ")"))
+            elif(caracter == ")"):
+                countPar -= 1
+                if countPar < 0:
+                    raise ValueError("Desbalanceamento de parenteses!")
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                tokens_list.append(Token("RPAR", ")"))
 
-                elif(caracter == "#"):
-                    if countPar != 0:
-                        raise ValueError("Desbalanceamento de parenteses!")
-                    if numero:
-                        tokens_list.append(Token("INT", int(numero)))
-                        numero = ""
-                    tokens_list.append(Token("EOF", "#"))
+            elif(caracter == "#"):
+                if countPar != 0:
+                    raise ValueError("Desbalanceamento de parenteses!")
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                tokens_list.append(Token("EOF", "#"))
 
-                    break
+                break
 
         return tokens_list
 
@@ -111,7 +110,7 @@ class Parser:
                 resultExpression -= resultTerm
             else:
                 raise ValueError
-                
+
         if token.type == "EOF" or token.type == "RPAR":
             return int(resultExpression)
         else:
