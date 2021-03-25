@@ -23,47 +23,46 @@ class Tokenizer:
     def montador(origin):
         tokens_list = []
         numero = ""
+        countSpace = 0
         origin += "#"
 
         for caracter in origin:
-            if(caracter.isdigit()):
-                numero += caracter
+            if not caracter == " ":
+                if(caracter.isdigit()):
+                    if countSpace == 0:
+                        numero += caracter
+                    else:
+                        raise ValueError("Espaço entre números!")
 
-            elif(caracter == " "):
-                tokens_list.append(Token("INT", int(numero)))
-                numero = ""
-
-            elif(caracter == "+"):
-                if numero:
+                elif(caracter == "+"):
                     tokens_list.append(Token("INT", int(numero)))
+                    tokens_list.append(Token("PLUS", "+"))
                     numero = ""
-                tokens_list.append(Token("PLUS", "+"))
-
-            elif(caracter == "-"):
-                if numero:
+                    countSpace = 0
+                elif(caracter == "-"):
                     tokens_list.append(Token("INT", int(numero)))
+                    tokens_list.append(Token("MINUS", "-"))
                     numero = ""
-                tokens_list.append(Token("MINUS", "-"))
-
-            elif(caracter == "*"):
-                if numero:
+                    countSpace = 0
+                elif(caracter == "*"):
                     tokens_list.append(Token("INT", int(numero)))
+                    tokens_list.append(Token("TIMES", "*"))
                     numero = ""
-                tokens_list.append(Token("TIMES", "*"))
-
-            elif(caracter == "/"):
-                if numero:
+                    countSpace = 0
+                elif(caracter == "/"):
                     tokens_list.append(Token("INT", int(numero)))
+                    tokens_list.append(Token("OVER", "/"))
                     numero = ""
-                tokens_list.append(Token("OVER", "/"))
-
-            elif(caracter == "#"):
-                if numero:
+                    countSpace = 0
+                elif(caracter == "#"):
                     tokens_list.append(Token("INT", int(numero)))
+                    tokens_list.append(Token("EOF", "#"))
                     numero = ""
-                tokens_list.append(Token("EOF", "#"))
-
-                break
+                    countSpace = 0
+                    break
+            else:
+                if numero:
+                    countSpace += 1
 
         return tokens_list
 
