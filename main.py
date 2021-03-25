@@ -22,33 +22,47 @@ class Tokenizer:
     def montador(origin):
         tokens_list = []
         numero = ""
+        countSpace = 0
         origin += "#"
 
         for caracter in origin:
             if not caracter == " ":
                 if(caracter.isdigit()):
-                    numero += caracter
+                    if countSpace == 0:
+                        numero += caracter
+                    else:
+                        raise ValueError("Espaço entre números!")
+
                 elif(caracter == "+"):
                     tokens_list.append(Token("INT", int(numero)))
                     tokens_list.append(Token("PLUS", "+"))
                     numero = ""
+                    countSpace = 0
                 elif(caracter == "-"):
                     tokens_list.append(Token("INT", int(numero)))
                     tokens_list.append(Token("MINUS", "-"))
                     numero = ""
+                    countSpace = 0
                 elif(caracter == "*"):
                     tokens_list.append(Token("INT", int(numero)))
                     tokens_list.append(Token("TIMES", "*"))
                     numero = ""
+                    countSpace = 0
                 elif(caracter == "/"):
                     tokens_list.append(Token("INT", int(numero)))
                     tokens_list.append(Token("OVER", "/"))
                     numero = ""
+                    countSpace = 0
                 elif(caracter == "#"):
                     tokens_list.append(Token("INT", int(numero)))
                     tokens_list.append(Token("EOF", "#"))
                     numero = ""
+                    countSpace = 0
                     break
+            else:
+                if numero:
+                    countSpace += 1
+
         return tokens_list
 
 
