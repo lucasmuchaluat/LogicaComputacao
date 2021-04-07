@@ -2,6 +2,57 @@ import sys
 import re
 
 
+class Node:
+    def __init__(self, valorNode, nodeList=[]):
+        self.value = valorNode
+        self.children = nodeList
+
+    def Evaluate(self):
+        pass
+
+
+class BinOp(Node):
+    def Evaluate(self):
+        child1 = self.children[0].Evaluate()
+        child2 = self.children[1].Evaluate()
+
+        if self.value == "PLUS":
+            valorOp = child1 + child2
+        elif self.value == "MINUS":
+            valorOp = child1 - child2
+        elif self.value == "TIMES":
+            valorOp = child1 * child2
+        elif self.value == "OVER":
+            valorOp = child1 / child2
+        else:
+            raise ValueError("BinOp operation error")
+
+        return int(valorOp)
+
+
+class UnOp(Node):
+    def Evaluate(self):
+        child1 = self.children[0].Evaluate()
+
+        if self.value == "PLUS":
+            valorOp = child1
+        elif self.value == "MINUS":
+            valorOp = -child1
+
+        return int(valorOp)
+
+
+class IntVal(Node):
+    def Evaluate(self):
+        valorInteiro = self.value
+        return(valorInteiro)
+
+
+class NoOp(Node):
+    def Evaluate(self):
+        return
+
+
 class Token:
     def __init__(self, tipoToken, valorToken):
         self.type = tipoToken
@@ -96,23 +147,22 @@ class Parser:
     def parseExpression():
         operadores = ["PLUS", "MINUS"]
 
-        resultTerm, token = Parser.parseTerm()
-        resultExpression = resultTerm
+        resultTerm = Parser.parseTerm()
 
-        while(token.type in operadores):
-            if(token.type == "PLUS"):
+        while(Parser.tokens.actual.type in operadores):
+            if(Parser.tokens.actual.type == "PLUS"):
                 Parser.tokens.selectNext()
-                resultTerm, token = Parser.parseTerm()
-                resultExpression += resultTerm
-            elif(token.type == "MINUS"):
+                resultTerm = BinOp("PLUS", [resultTerm, Parser.parseTerm()])
+
+            elif(Parser.tokens.actual.type == "MINUS"):
                 Parser.tokens.selectNext()
-                resultTerm, token = Parser.parseTerm()
-                resultExpression -= resultTerm
+                resultTerm = BinOp("MINUS", [resultTerm, Parser.parseTerm()])
+
             else:
                 raise ValueError
 
-        if token.type == "EOF" or token.type == "RPAR":
-            return int(resultExpression)
+        if Parser.tokens.actual.type == "EOF" or Parser.tokens.actual.type == "RPAR":
+            return resultTerm
         else:
             raise ValueError
 
@@ -121,33 +171,34 @@ class Parser:
         operadores = ["TIMES", "OVER"]
 
         resultFactor = Parser.parseFactor()
-        resultTerm = resultFactor
         Parser.tokens.selectNext()
 
         while(Parser.tokens.actual.type in operadores):
             if(Parser.tokens.actual.type == "TIMES"):
                 Parser.tokens.selectNext()
-                resultFactor = Parser.parseFactor()
-                resultTerm *= resultFactor
+                resultFactor = BinOp(
+                    "TIMES", [resultFactor, Parser.parseFactor()])
+
             elif(Parser.tokens.actual.type == "OVER"):
                 Parser.tokens.selectNext()
-                resultFactor = Parser.parseFactor()
-                resultTerm /= resultFactor
+                resultFactor = BinOp(
+                    "OVER", [resultFactor, Parser.parseFactor()])
+
             Parser.tokens.selectNext()
 
-        return int(resultTerm), Parser.tokens.actual
+        return resultFactor
 
     @staticmethod
     def parseFactor():
         if(Parser.tokens.actual.type == "INT"):
             resultFactor = Parser.tokens.actual.value
-            return resultFactor
+            return IntVal(resultFactor)
         elif(Parser.tokens.actual.type == "PLUS"):
             Parser.tokens.selectNext()
-            return Parser.parseFactor()
+            return UnOp("PLUS", [Parser.parseFactor()])
         elif(Parser.tokens.actual.type == "MINUS"):
             Parser.tokens.selectNext()
-            return -Parser.parseFactor()
+            return UnOp("MINUS", [Parser.parseFactor()])
         elif(Parser.tokens.actual.type == "LPAR"):
             Parser.tokens.selectNext()
             expression = Parser.parseExpression()
@@ -159,7 +210,8 @@ class Parser:
     @staticmethod
     def run(origin):
         Parser.tokens = Tokenizer(PrePro.filter(origin))
-        return Parser.parseExpression()
+        finalValue = Parser.parseExpression()
+        return finalValue.Evaluate()
 
 
 class PrePro:
@@ -170,4 +222,6 @@ class PrePro:
 
 
 if __name__ == "__main__":
-    print(Parser.run(sys.argv[1]))
+    # print(Parser.run("(2 + 3) / ( 5 * 1)"))
+    with open(sys.argv[1], "r") as f:
+        print(Parser.run(f.read()))

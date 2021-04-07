@@ -24,14 +24,16 @@ class Tokenizer:
         tokens_list = []
         numero = ""
         origin += "#"
+        countPar = 0
 
         for caracter in origin:
             if(caracter.isdigit()):
                 numero += caracter
 
             elif(caracter == " "):
-                tokens_list.append(Token("INT", int(numero)))
-                numero = ""
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
 
             elif(caracter == "+"):
                 if numero:
@@ -57,7 +59,25 @@ class Tokenizer:
                     numero = ""
                 tokens_list.append(Token("OVER", "/"))
 
+            elif(caracter == "("):
+                countPar += 1
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                tokens_list.append(Token("LPAR", "("))
+
+            elif(caracter == ")"):
+                countPar -= 1
+                if countPar < 0:
+                    raise ValueError("Desbalanceamento de parenteses!")
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                tokens_list.append(Token("RPAR", ")"))
+
             elif(caracter == "#"):
+                if countPar != 0:
+                    raise ValueError("Desbalanceamento de parenteses!")
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
@@ -81,14 +101,17 @@ class Parser:
 
         while(token.type in operadores):
             if(token.type == "PLUS"):
+                Parser.tokens.selectNext()
                 resultTerm, token = Parser.parseTerm()
                 resultExpression += resultTerm
             elif(token.type == "MINUS"):
+                Parser.tokens.selectNext()
                 resultTerm, token = Parser.parseTerm()
                 resultExpression -= resultTerm
             else:
                 raise ValueError
-        if token.type == "EOF":
+
+        if token.type == "EOF" or token.type == "RPAR":
             return int(resultExpression)
         else:
             raise ValueError
@@ -97,27 +120,41 @@ class Parser:
     def parseTerm():
         operadores = ["TIMES", "OVER"]
 
-        while(Parser.tokens.actual.type != "EOF"):
-            if(Parser.tokens.actual.type == "INT"):
-                resultado = Parser.tokens.actual.value
+        resultFactor = Parser.parseFactor()
+        resultTerm = resultFactor
+        Parser.tokens.selectNext()
+
+        while(Parser.tokens.actual.type in operadores):
+            if(Parser.tokens.actual.type == "TIMES"):
                 Parser.tokens.selectNext()
-                while(Parser.tokens.actual.type in operadores):
-                    if(Parser.tokens.actual.type == "TIMES"):
-                        Parser.tokens.selectNext()
-                        if(Parser.tokens.actual.type == "INT"):
-                            resultado *= Parser.tokens.actual.value
-                        else:
-                            raise ValueError
-                    elif(Parser.tokens.actual.type == "OVER"):
-                        Parser.tokens.selectNext()
-                        if(Parser.tokens.actual.type == "INT"):
-                            resultado /= Parser.tokens.actual.value
-                        else:
-                            raise ValueError
-                    Parser.tokens.selectNext()
-                return int(resultado), Parser.tokens.actual
+                resultFactor = Parser.parseFactor()
+                resultTerm *= resultFactor
+            elif(Parser.tokens.actual.type == "OVER"):
+                Parser.tokens.selectNext()
+                resultFactor = Parser.parseFactor()
+                resultTerm /= resultFactor
+            Parser.tokens.selectNext()
+
+        return int(resultTerm), Parser.tokens.actual
+
+    @staticmethod
+    def parseFactor():
+        if(Parser.tokens.actual.type == "INT"):
+            resultFactor = Parser.tokens.actual.value
+            return resultFactor
+        elif(Parser.tokens.actual.type == "PLUS"):
+            Parser.tokens.selectNext()
+            return Parser.parseFactor()
+        elif(Parser.tokens.actual.type == "MINUS"):
+            Parser.tokens.selectNext()
+            return -Parser.parseFactor()
+        elif(Parser.tokens.actual.type == "LPAR"):
+            Parser.tokens.selectNext()
+            expression = Parser.parseExpression()
+            if(Parser.tokens.actual.type == "RPAR"):
+                return expression
             else:
-                Parser.tokens.selectNext()
+                raise ValueError
 
     @staticmethod
     def run(origin):
@@ -128,9 +165,9 @@ class Parser:
 class PrePro:
     @staticmethod
     def filter(arg):
-        new_arg = re.sub(r"\/\*.*?\*\/", "", arg)
+        new_arg = re.sub(r"\/\*.*?\*\/", " ", arg)
         return new_arg
 
 
 if __name__ == "__main__":
-    print(Parser.run(sys.argv[1]))
+    print(Parser.run("1 + 1 + 3 * 1"))
