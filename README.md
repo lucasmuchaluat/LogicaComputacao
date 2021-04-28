@@ -1,9 +1,16 @@
 # LogicaComputacao
 Repositório para disciplina Lógica da Computação 2021.1
 
-O projeto consiste em construir um programa que recebe como argumento uma cadeia de operações de números inteiros de múltiplos dígitos. Ao final, ele deve exibir o resultado da conta.
+O projeto consiste em construir um programa que recebe como argumento uma cadeia de operações de números inteiros de múltiplos dígitos as realiza. 
 
-Para rodá-lo, basta inserir a operação a ser realizada em um ```arquivo.c``` a sua escolha. Ele deve conter uma expressão (soma, multiplicação, parênteses, comentários, etc), sem aspas, disposta somente em uma linha (não serão testadas múltiplas expressões em um único arquivo).
+Para rodá-lo, basta inserir as operações a serem realizadas em um ```arquivo.c``` a sua escolha. Ele pode conter múltiplas expressões (soma, multiplicação, parênteses, comentários, etc), sem aspas, disposta entre linhas separadas por ";". A linguagem suporta identificadores (atribuições de variáveis) e prints. Segue exemplo abaixo:
+
+```
+a = 2;
+b = a + 3; /*commentario*/
+b = b - 3;
+println /*comentario*/ ((b + /*comentario*/ 1) * 2);
+```
 
 Feito isso, é possível chamar o programa passando o nome do arquivo via linha de comando. Por exemplo:
 
@@ -14,15 +21,21 @@ python3 main.py {nome do seu arquivo}.c
 EBNF:
 
 ```
-EXPRESSION = TERM, {("+" | "-"), TERM} ;
-TERM = FACTOR, {("*" | "/"), FACTOR} ;
-FACTOR = ("+" | "-"), FACTOR | "(", EXPRESSION, ")" | NUMBER ; 
-NUMBER = DIGIT, {DIGIT} ;
-DIGIT = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 ;
+BLOCK = { COMMAND } ;
+COMMAND = ( λ | ASSIGNMENT | PRINT), ";" ;
+ASSIGNMENT = IDENTIFIER, "=", EXPRESSION ;
+PRINT = "println", "(", EXPRESSION, ")" ;
+EXPRESSION = TERM, { ("+" | "-"), TERM } ;
+TERM = FACTOR, { ("*" | "/"), FACTOR } ;
+FACTOR = (("+" | "-"), FACTOR) | NUMBER | "(", EXPRESSION, ")" | IDENTIFIER ;
+IDENTIFIER = LETTER, { LETTER | DIGIT | "_" } ;
+NUMBER = DIGIT, { DIGIT } ;
+LETTER = ( a | ... | z | A | ... | Z ) ;
+DIGIT = ( 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 ) ; 
 ```
 
 Além de parênteses, o programa suporta o uso de comentários na expressão também. Para inserir um basta usar a seguinte notação:
 
 ```
-"(3+2)/5 /* comentário */"
+x = (3+2)/5 /* comentário */
 ```

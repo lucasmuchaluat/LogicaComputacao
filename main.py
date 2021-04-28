@@ -1,6 +1,8 @@
 import sys
 import re
 
+dictGlobal = {}
+
 
 class Node:
     def __init__(self, valorNode, nodeList=[]):
@@ -30,6 +32,15 @@ class BinOp(Node):
         return int(valorOp)
 
 
+class Atribuicao(Node):
+    def Evaluate(self):
+        child1 = self.children[0]
+        child2 = self.children[1].Evaluate()
+
+        if self.value == "EQUAL":
+            SymbolTable.setter(child1, child2)
+
+
 class UnOp(Node):
     def Evaluate(self):
         child1 = self.children[0].Evaluate()
@@ -48,9 +59,21 @@ class IntVal(Node):
         return(valorInteiro)
 
 
+class Identific(Node):
+    def Evaluate(self):
+        valorVariavel = SymbolTable.getter(self.value)
+        return(valorVariavel)
+
+
 class NoOp(Node):
     def Evaluate(self):
         return
+
+
+class Println(Node):
+    def Evaluate(self):
+        child1 = self.children[0].Evaluate()
+        print(child1)
 
 
 class Token:
@@ -74,40 +97,76 @@ class Tokenizer:
     def montador(origin):
         tokens_list = []
         numero = ""
+        identifier = ""
         origin += "#"
         countPar = 0
+        palavrasReservadas = ["println"]
 
         for caracter in origin:
-            if(caracter.isdigit()):
+            if identifier:
+                if identifier[0] == "_":
+                    raise ValueError("Variavel Não pode começar com _!")
+
+            if(caracter.isdigit() and identifier == ""):
                 numero += caracter
 
             elif(caracter == " "):
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        tokens_list.append(Token("PRINT", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
 
             elif(caracter == "+"):
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        tokens_list.append(Token("PRINT", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
                 tokens_list.append(Token("PLUS", "+"))
 
             elif(caracter == "-"):
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        tokens_list.append(Token("PRINT", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
                 tokens_list.append(Token("MINUS", "-"))
 
             elif(caracter == "*"):
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        tokens_list.append(Token("PRINT", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
                 tokens_list.append(Token("TIMES", "*"))
 
             elif(caracter == "/"):
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        tokens_list.append(Token("PRINT", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
                 tokens_list.append(Token("OVER", "/"))
 
             elif(caracter == "("):
@@ -115,6 +174,12 @@ class Tokenizer:
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        tokens_list.append(Token("PRINT", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
                 tokens_list.append(Token("LPAR", "("))
 
             elif(caracter == ")"):
@@ -124,7 +189,37 @@ class Tokenizer:
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        tokens_list.append(Token("PRINT", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
                 tokens_list.append(Token("RPAR", ")"))
+
+            elif(caracter == ";"):
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        tokens_list.append(Token("PRINT", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
+                tokens_list.append(Token("ENDLINE", ";"))
+
+            elif(caracter == "="):
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        tokens_list.append(Token("PRINT", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
+                tokens_list.append(Token("EQUAL", "="))
 
             elif(caracter == "#"):
                 if countPar != 0:
@@ -132,16 +227,65 @@ class Tokenizer:
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        tokens_list.append(Token("PRINT", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
                 tokens_list.append(Token("EOF", "#"))
-
                 break
 
+            elif(caracter == "\n"):
+                continue
+            else:
+                identifier += caracter
+        # for e in tokens_list:
+        #     print(e.value)
         return tokens_list
 
 
 class Parser:
     def __init__(self):
         self.tokens = None
+
+    @staticmethod
+    def parseBlock():
+        commandList = []
+        while(Parser.tokens.actual.type != "EOF"):
+            order = Parser.parseCommand()
+            commandList.append(order)
+            Parser.tokens.selectNext()
+        return commandList
+
+    @staticmethod
+    def parseCommand():
+        command = NoOp(None)
+        if(Parser.tokens.actual.type == "IDENT"):
+            variavel = Parser.tokens.actual.value
+            Parser.tokens.selectNext()
+            if(Parser.tokens.actual.type == "EQUAL"):
+                Parser.tokens.selectNext()
+                exp = Parser.parseExpression()
+                command = Atribuicao("EQUAL", [variavel, exp])
+            else:
+                raise ValueError("Expecting an EQUAL!")
+        elif(Parser.tokens.actual.type == "PRINT"):
+            Parser.tokens.selectNext()
+            if(Parser.tokens.actual.type == "LPAR"):
+                Parser.tokens.selectNext()
+                exp = Parser.parseExpression()
+                if(Parser.tokens.actual.type == "RPAR"):
+                    Parser.tokens.selectNext()
+                    command = Println("PRINT", [exp])
+                else:
+                    raise ValueError("Expecting a RPAR!")
+            else:
+                raise ValueError("Expecting an LPAR!")
+        if(Parser.tokens.actual.type == "ENDLINE"):
+            return command
+        else:
+            raise ValueError("Expecting PONTO VIRGULA!")
 
     @staticmethod
     def parseExpression():
@@ -161,7 +305,7 @@ class Parser:
             else:
                 raise ValueError
 
-        if Parser.tokens.actual.type == "EOF" or Parser.tokens.actual.type == "RPAR":
+        if Parser.tokens.actual.type == "ENDLINE" or Parser.tokens.actual.type == "RPAR":
             return resultTerm
         else:
             raise ValueError
@@ -206,12 +350,18 @@ class Parser:
                 return expression
             else:
                 raise ValueError
+        elif(Parser.tokens.actual.type == "IDENT"):
+            resultFactor = Parser.tokens.actual.value
+            return Identific(resultFactor)
+        else:
+            raise ValueError
 
     @staticmethod
     def run(origin):
         Parser.tokens = Tokenizer(PrePro.filter(origin))
-        finalValue = Parser.parseExpression()
-        return finalValue.Evaluate()
+        commandList = Parser.parseBlock()
+        for instruction in commandList:
+            instruction.Evaluate()
 
 
 class PrePro:
@@ -221,7 +371,20 @@ class PrePro:
         return new_arg
 
 
+class SymbolTable:
+    # GETTER
+    @staticmethod
+    def getter(key):
+        return dictGlobal[key]
+
+    # SETTER
+    @staticmethod
+    def setter(key, value):
+        dictGlobal[key] = value
+
+
 if __name__ == "__main__":
-    # print(Parser.run("(2 + 3) / ( 5 * 1)"))
+    # Parser.run("printlnn = 2;")
+    # print(dictGlobal)
     with open(sys.argv[1], "r") as f:
-        print(Parser.run(f.read()))
+        Parser.run(f.read())
