@@ -26,6 +26,16 @@ class BinOp(Node):
             valorOp = child1 * child2
         elif self.value == "OVER":
             valorOp = child1 / child2
+        elif self.value == "MAIOR":
+            valorOp = child1 > child2
+        elif self.value == "MENOR":
+            valorOp = child1 < child2
+        elif self.value == "EQUAL":
+            valorOp = child1 == child2
+        elif self.value == "AND":
+            valorOp = child1 and child2
+        elif self.value == "OR":
+            valorOp = child1 or child2
         else:
             raise ValueError("BinOp operation error")
 
@@ -37,7 +47,7 @@ class Atribuicao(Node):
         child1 = self.children[0]
         child2 = self.children[1].Evaluate()
 
-        if self.value == "EQUAL":
+        if self.value == "RECEBE":
             SymbolTable.setter(child1, child2)
 
 
@@ -49,6 +59,8 @@ class UnOp(Node):
             valorOp = child1
         elif self.value == "MINUS":
             valorOp = -child1
+        elif self.value == "NOT":
+            valorOp = not child1
 
         return int(valorOp)
 
@@ -76,6 +88,18 @@ class Println(Node):
         print(child1)
 
 
+class Readln(Node):
+    def Evaluate(self):
+        valorInputado = input()
+        return int(valorInputado)
+
+
+class NodeBlock(Node):
+    def Evaluate(self):
+        for child in self.children:
+            child.Evaluate()
+
+
 class Token:
     def __init__(self, tipoToken, valorToken):
         self.type = tipoToken
@@ -98,9 +122,12 @@ class Tokenizer:
         tokens_list = []
         numero = ""
         identifier = ""
+        operadorDuplo = ""
         origin += "#"
         countPar = 0
-        palavrasReservadas = ["println"]
+        countKey = 0
+        palavrasReservadas = ["println", "readln", "while", "if", "else"]
+        operadoresDuplos = ["=", "&", "|"]
 
         for caracter in origin:
             if identifier:
@@ -111,59 +138,154 @@ class Tokenizer:
                 numero += caracter
 
             elif(caracter == " "):
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
                 if identifier:
                     if identifier in palavrasReservadas:
-                        tokens_list.append(Token("PRINT", identifier))
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
 
             elif(caracter == "+"):
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
                 if identifier:
                     if identifier in palavrasReservadas:
-                        tokens_list.append(Token("PRINT", identifier))
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
                 tokens_list.append(Token("PLUS", "+"))
 
             elif(caracter == "-"):
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
                 if identifier:
                     if identifier in palavrasReservadas:
-                        tokens_list.append(Token("PRINT", identifier))
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
                 tokens_list.append(Token("MINUS", "-"))
 
             elif(caracter == "*"):
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
                 if identifier:
                     if identifier in palavrasReservadas:
-                        tokens_list.append(Token("PRINT", identifier))
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
                 tokens_list.append(Token("TIMES", "*"))
 
             elif(caracter == "/"):
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
                 if identifier:
                     if identifier in palavrasReservadas:
-                        tokens_list.append(Token("PRINT", identifier))
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -171,12 +293,31 @@ class Tokenizer:
 
             elif(caracter == "("):
                 countPar += 1
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
                 if identifier:
                     if identifier in palavrasReservadas:
-                        tokens_list.append(Token("PRINT", identifier))
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -186,50 +327,256 @@ class Tokenizer:
                 countPar -= 1
                 if countPar < 0:
                     raise ValueError("Desbalanceamento de parenteses!")
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
                 if identifier:
                     if identifier in palavrasReservadas:
-                        tokens_list.append(Token("PRINT", identifier))
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
                 tokens_list.append(Token("RPAR", ")"))
 
-            elif(caracter == ";"):
+            elif(caracter == "{"):
+                countKey += 1
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
                 if identifier:
                     if identifier in palavrasReservadas:
-                        tokens_list.append(Token("PRINT", identifier))
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
+                tokens_list.append(Token("LKEY", "{"))
+
+            elif(caracter == "}"):
+                countKey -= 1
+                if countKey < 0:
+                    raise ValueError("Desbalanceamento de chaves!")
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
+                tokens_list.append(Token("RKEY", "}"))
+
+            elif(caracter == ";"):
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
                 tokens_list.append(Token("ENDLINE", ";"))
 
-            elif(caracter == "="):
+            elif(caracter == ">"):
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
                 if identifier:
                     if identifier in palavrasReservadas:
-                        tokens_list.append(Token("PRINT", identifier))
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
-                tokens_list.append(Token("EQUAL", "="))
+                tokens_list.append(Token("MAIOR", ">"))
+
+            elif(caracter == "<"):
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
+                tokens_list.append(Token("MENOR", "<"))
+
+            elif(caracter == "!"):
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
+                tokens_list.append(Token("NOT", "!"))
 
             elif(caracter == "#"):
                 if countPar != 0:
                     raise ValueError("Desbalanceamento de parenteses!")
+                if countKey != 0:
+                    raise ValueError("Desbalanceamento de chaves!")
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
                 if identifier:
                     if identifier in palavrasReservadas:
-                        tokens_list.append(Token("PRINT", identifier))
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -238,6 +585,22 @@ class Tokenizer:
 
             elif(caracter == "\n"):
                 continue
+
+            elif(caracter in operadoresDuplos):
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
+                operadorDuplo += caracter
+
             else:
                 identifier += caracter
         # for e in tokens_list:
@@ -251,12 +614,17 @@ class Parser:
 
     @staticmethod
     def parseBlock():
-        commandList = []
-        while(Parser.tokens.actual.type != "EOF"):
-            order = Parser.parseCommand()
-            commandList.append(order)
+        if(Parser.tokens.actual.type == "LKEY"):
             Parser.tokens.selectNext()
-        return commandList
+            commandList = []
+            while(Parser.tokens.actual.type != "EOF"):
+                order = Parser.parseCommand()
+                commandList.append(order)
+                Parser.tokens.selectNext()
+            statements = NodeBlock("STAT", commandList)
+            return commandList
+        else:
+            raise ValueError("Expecting LKEY!")
 
     @staticmethod
     def parseCommand():
@@ -264,34 +632,109 @@ class Parser:
         if(Parser.tokens.actual.type == "IDENT"):
             variavel = Parser.tokens.actual.value
             Parser.tokens.selectNext()
-            if(Parser.tokens.actual.type == "EQUAL"):
+            if(Parser.tokens.actual.type == "RECEBE"):
                 Parser.tokens.selectNext()
-                exp = Parser.parseExpression()
-                command = Atribuicao("EQUAL", [variavel, exp])
+                orexp = Parser.parseOrexpr()
+                command = Atribuicao("RECEBE", [variavel, orexp])
             else:
-                raise ValueError("Expecting an EQUAL!")
+                raise ValueError("Expecting an RECEBE!")
         elif(Parser.tokens.actual.type == "PRINT"):
             Parser.tokens.selectNext()
             if(Parser.tokens.actual.type == "LPAR"):
                 Parser.tokens.selectNext()
-                exp = Parser.parseExpression()
+                orexp = Parser.parseOrexpr()
                 if(Parser.tokens.actual.type == "RPAR"):
                     Parser.tokens.selectNext()
-                    command = Println("PRINT", [exp])
+                    command = Println("PRINT", [orexp])
                 else:
                     raise ValueError("Expecting a RPAR!")
             else:
                 raise ValueError("Expecting an LPAR!")
+        else:
+            Parser.parseBlock()
         if(Parser.tokens.actual.type == "ENDLINE"):
             return command
         else:
             raise ValueError("Expecting PONTO VIRGULA!")
 
     @staticmethod
+    def parseOrexpr():
+        operadores = ["OR"]
+
+        resultAndexpr = Parser.parseAndexpr()
+
+        while(Parser.tokens.actual.type in operadores):
+            if(Parser.tokens.actual.type == "OR"):
+                Parser.tokens.selectNext()
+                resultAndexpr = BinOp(
+                    "OR", [resultAndexpr, Parser.parseAndexpr()])
+            Parser.tokens.selectNext()
+
+        if Parser.tokens.actual.type == "ENDLINE" or Parser.tokens.actual.type == "RPAR":
+            return resultAndexpr
+        else:
+            raise ValueError
+
+    @staticmethod
+    def parseAndexpr():
+        operadores = ["AND"]
+
+        resultEqexpr = Parser.parseEqexpr()
+        Parser.tokens.selectNext()
+
+        while(Parser.tokens.actual.type in operadores):
+            if(Parser.tokens.actual.type == "AND"):
+                Parser.tokens.selectNext()
+                resultEqexpr = BinOp(
+                    "AND", [resultEqexpr, Parser.parseEqexpr()])
+            Parser.tokens.selectNext()
+
+        return resultEqexpr
+
+    @staticmethod
+    def parseEqexpr():
+        operadores = ["EQUAL"]
+
+        resultRelexpr = Parser.parseRelexpr()
+        Parser.tokens.selectNext()
+
+        while(Parser.tokens.actual.type in operadores):
+            if(Parser.tokens.actual.type == "EQUAL"):
+                Parser.tokens.selectNext()
+                resultRelexpr = BinOp(
+                    "EQUAL", [resultRelexpr, Parser.parseRelexpr()])
+            Parser.tokens.selectNext()
+
+        return resultRelexpr
+
+    @staticmethod
+    def parseRelexpr():
+        operadores = ["MAIOR", "MENOR"]
+
+        resultExpression = Parser.parseExpression()
+        Parser.tokens.selectNext()
+
+        while(Parser.tokens.actual.type in operadores):
+            if(Parser.tokens.actual.type == "MAIOR"):
+                Parser.tokens.selectNext()
+                resultExpression = BinOp(
+                    "MAIOR", [resultExpression, Parser.parseExpression()])
+
+            elif(Parser.tokens.actual.type == "MENOR"):
+                Parser.tokens.selectNext()
+                resultExpression = BinOp(
+                    "MENOR", [resultExpression, Parser.parseExpression()])
+
+            Parser.tokens.selectNext()
+
+        return resultExpression
+
+    @staticmethod
     def parseExpression():
         operadores = ["PLUS", "MINUS"]
 
         resultTerm = Parser.parseTerm()
+        Parser.tokens.selectNext()
 
         while(Parser.tokens.actual.type in operadores):
             if(Parser.tokens.actual.type == "PLUS"):
@@ -302,13 +745,9 @@ class Parser:
                 Parser.tokens.selectNext()
                 resultTerm = BinOp("MINUS", [resultTerm, Parser.parseTerm()])
 
-            else:
-                raise ValueError
+            Parser.tokens.selectNext()
 
-        if Parser.tokens.actual.type == "ENDLINE" or Parser.tokens.actual.type == "RPAR":
-            return resultTerm
-        else:
-            raise ValueError
+        return resultTerm
 
     @staticmethod
     def parseTerm():
@@ -343,9 +782,12 @@ class Parser:
         elif(Parser.tokens.actual.type == "MINUS"):
             Parser.tokens.selectNext()
             return UnOp("MINUS", [Parser.parseFactor()])
+        elif(Parser.tokens.actual.type == "NOT"):
+            Parser.tokens.selectNext()
+            return UnOp("NOT", [Parser.parseFactor()])
         elif(Parser.tokens.actual.type == "LPAR"):
             Parser.tokens.selectNext()
-            expression = Parser.parseExpression()
+            expression = Parser.parseOrexpr()
             if(Parser.tokens.actual.type == "RPAR"):
                 return expression
             else:
@@ -353,6 +795,16 @@ class Parser:
         elif(Parser.tokens.actual.type == "IDENT"):
             resultFactor = Parser.tokens.actual.value
             return Identific(resultFactor)
+        elif(Parser.tokens.actual.type == "READLINE"):
+            Parser.tokens.selectNext()
+            if(Parser.tokens.actual.type == "LPAR"):
+                Parser.tokens.selectNext()
+                if(Parser.tokens.actual.type == "RPAR"):
+                    return Readln("PRINT")
+                else:
+                    raise ValueError("Missing RPAR in READLN!")
+            else:
+                raise ValueError("Missing LPAR in READLN!")
         else:
             raise ValueError
 

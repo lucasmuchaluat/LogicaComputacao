@@ -21,14 +21,21 @@ python3 main.py {nome do seu arquivo}.c
 EBNF:
 
 ```
-BLOCK = { COMMAND } ;
-COMMAND = ( λ | ASSIGNMENT | PRINT), ";" ;
-ASSIGNMENT = IDENTIFIER, "=", EXPRESSION ;
-PRINT = "println", "(", EXPRESSION, ")" ;
+BLOCK = "{", { COMMAND }, "}" ;
+COMMAND = ( λ | ASSIGNMENT | PRINT | WHILE | IF | BLOCK ), ";" ;
+ASSIGNMENT = IDENTIFIER, "=", OREXPR ;
+PRINT = "println", "(", OREXPR, ")" ;
+WHILE = "while", "(", OREXPR, ")", "{", COMMAND, "}" ;
+IF = "if", "(", OREXPR, ")", "{", COMMAND, "}", { "else", "{", COMMAND, "}" } ;
+OREXPR = ANDEXPR, { "||", ANDEXPR } ;
+ANDEXPR = EQEXPR, { "&&", EQEXPR } ;
+EQEXPR = RELEXPR, { "==", RELEXPR } ;
+RELEXPR = EXPRESSION, { (">" | "<"), EXPRESSION } ;
 EXPRESSION = TERM, { ("+" | "-"), TERM } ;
 TERM = FACTOR, { ("*" | "/"), FACTOR } ;
-FACTOR = (("+" | "-"), FACTOR) | NUMBER | "(", EXPRESSION, ")" | IDENTIFIER ;
+FACTOR = (("+" | "-" | "!"), FACTOR) | NUMBER | "(", OREXPR, ")" | IDENTIFIER | READLINE ;
 IDENTIFIER = LETTER, { LETTER | DIGIT | "_" } ;
+READLINE = "readln", "(", ")" ;
 NUMBER = DIGIT, { DIGIT } ;
 LETTER = ( a | ... | z | A | ... | Z ) ;
 DIGIT = ( 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 ) ; 
