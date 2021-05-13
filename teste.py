@@ -1,4 +1,4 @@
-a = 4
-b = not a
-
-print(int(b))
+a = 0
+while a < 3:
+    a += 1
+    print(a)

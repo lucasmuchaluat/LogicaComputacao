@@ -100,6 +100,24 @@ class NodeBlock(Node):
             child.Evaluate()
 
 
+class While(Node):
+    def Evaluate(self):
+        while self.children[0].Evaluate():
+            self.children[1].Evaluate()
+
+
+class If(Node):
+    def Evaluate(self):
+        child1 = self.children[0].Evaluate()
+        child2 = self.children[1]
+        child3 = self.children[2]
+
+        if child1:
+            child2.Evaluate()
+        else:
+            child3.Evaluate()
+
+
 class Token:
     def __init__(self, tipoToken, valorToken):
         self.type = tipoToken
@@ -617,25 +635,29 @@ class Parser:
         if(Parser.tokens.actual.type == "LKEY"):
             Parser.tokens.selectNext()
             commandList = []
-            while(Parser.tokens.actual.type != "EOF"):
+            while(Parser.tokens.actual.type != "RKEY" and Parser.tokens.actual.type != "EOF"):
                 order = Parser.parseCommand()
                 commandList.append(order)
                 Parser.tokens.selectNext()
             statements = NodeBlock("STAT", commandList)
-            return commandList
+            return statements
         else:
             raise ValueError("Expecting LKEY!")
 
     @staticmethod
     def parseCommand():
-        command = NoOp(None)
+        order = NoOp(None)
         if(Parser.tokens.actual.type == "IDENT"):
             variavel = Parser.tokens.actual.value
             Parser.tokens.selectNext()
             if(Parser.tokens.actual.type == "RECEBE"):
                 Parser.tokens.selectNext()
                 orexp = Parser.parseOrexpr()
-                command = Atribuicao("RECEBE", [variavel, orexp])
+                order = Atribuicao("RECEBE", [variavel, orexp])
+                if(Parser.tokens.actual.type == "ENDLINE"):
+                    return order
+                else:
+                    raise ValueError("Expecting PONTO VIRGULA!")
             else:
                 raise ValueError("Expecting an RECEBE!")
         elif(Parser.tokens.actual.type == "PRINT"):
@@ -645,17 +667,65 @@ class Parser:
                 orexp = Parser.parseOrexpr()
                 if(Parser.tokens.actual.type == "RPAR"):
                     Parser.tokens.selectNext()
-                    command = Println("PRINT", [orexp])
+                    order = Println("PRINT", [orexp])
+                    if(Parser.tokens.actual.type == "ENDLINE"):
+                        return order
+                    else:
+                        raise ValueError("Expecting PONTO VIRGULA!")
+                else:
+                    raise ValueError("Expecting a RPAR!")
+            else:
+                raise ValueError("Expecting an LPAR!")
+        elif(Parser.tokens.actual.type == "WHILE"):
+            Parser.tokens.selectNext()
+            if(Parser.tokens.actual.type == "LPAR"):
+                Parser.tokens.selectNext()
+                condition = Parser.parseOrexpr()
+                if(Parser.tokens.actual.type == "RPAR"):
+                    Parser.tokens.selectNext()
+                    if(Parser.tokens.actual.type == "LKEY"):
+                        command = Parser.parseBlock()
+                    else:
+                        command = Parser.parseCommand()
+                    order = While("WHILE", [condition, command])
+                    return order
+                else:
+                    raise ValueError("Expecting a RPAR!")
+            else:
+                raise ValueError("Expecting an LPAR!")
+        elif(Parser.tokens.actual.type == "IF"):
+            Parser.tokens.selectNext()
+            if(Parser.tokens.actual.type == "LPAR"):
+                Parser.tokens.selectNext()
+                condition = Parser.parseOrexpr()
+                if(Parser.tokens.actual.type == "RPAR"):
+                    Parser.tokens.selectNext()
+                    if(Parser.tokens.actual.type == "LKEY"):
+                        command = Parser.parseBlock()
+                        if(Parser.tokens.actual.type == "RKEY"):
+                            Parser.tokens.selectNext()
+                        else:
+                            raise ValueError("Expecting a RKEY!")
+                    else:
+                        command = Parser.parseCommand()
+                    if(Parser.tokens.actual.type == "ELSE"):
+                        Parser.tokens.selectNext()
+                        if(Parser.tokens.actual.type == "LKEY"):
+                            commandElse = Parser.parseBlock()
+                        else:
+                            commandElse = Parser.parseCommand()
+                    else:
+                        commandElse = NoOp(None)
+                    order = If("IF", [condition, command, commandElse])
+                    return order
                 else:
                     raise ValueError("Expecting a RPAR!")
             else:
                 raise ValueError("Expecting an LPAR!")
         else:
-            Parser.parseBlock()
-        if(Parser.tokens.actual.type == "ENDLINE"):
-            return command
-        else:
-            raise ValueError("Expecting PONTO VIRGULA!")
+            if not Parser.tokens.actual.type == "ENDLINE":
+                order = Parser.parseBlock()
+            return order
 
     @staticmethod
     def parseOrexpr():
@@ -668,7 +738,6 @@ class Parser:
                 Parser.tokens.selectNext()
                 resultAndexpr = BinOp(
                     "OR", [resultAndexpr, Parser.parseAndexpr()])
-            Parser.tokens.selectNext()
 
         if Parser.tokens.actual.type == "ENDLINE" or Parser.tokens.actual.type == "RPAR":
             return resultAndexpr
@@ -680,14 +749,12 @@ class Parser:
         operadores = ["AND"]
 
         resultEqexpr = Parser.parseEqexpr()
-        Parser.tokens.selectNext()
 
         while(Parser.tokens.actual.type in operadores):
             if(Parser.tokens.actual.type == "AND"):
                 Parser.tokens.selectNext()
                 resultEqexpr = BinOp(
                     "AND", [resultEqexpr, Parser.parseEqexpr()])
-            Parser.tokens.selectNext()
 
         return resultEqexpr
 
@@ -696,14 +763,12 @@ class Parser:
         operadores = ["EQUAL"]
 
         resultRelexpr = Parser.parseRelexpr()
-        Parser.tokens.selectNext()
 
         while(Parser.tokens.actual.type in operadores):
             if(Parser.tokens.actual.type == "EQUAL"):
                 Parser.tokens.selectNext()
                 resultRelexpr = BinOp(
                     "EQUAL", [resultRelexpr, Parser.parseRelexpr()])
-            Parser.tokens.selectNext()
 
         return resultRelexpr
 
@@ -712,7 +777,6 @@ class Parser:
         operadores = ["MAIOR", "MENOR"]
 
         resultExpression = Parser.parseExpression()
-        Parser.tokens.selectNext()
 
         while(Parser.tokens.actual.type in operadores):
             if(Parser.tokens.actual.type == "MAIOR"):
@@ -725,8 +789,6 @@ class Parser:
                 resultExpression = BinOp(
                     "MENOR", [resultExpression, Parser.parseExpression()])
 
-            Parser.tokens.selectNext()
-
         return resultExpression
 
     @staticmethod
@@ -734,7 +796,6 @@ class Parser:
         operadores = ["PLUS", "MINUS"]
 
         resultTerm = Parser.parseTerm()
-        Parser.tokens.selectNext()
 
         while(Parser.tokens.actual.type in operadores):
             if(Parser.tokens.actual.type == "PLUS"):
@@ -745,8 +806,6 @@ class Parser:
                 Parser.tokens.selectNext()
                 resultTerm = BinOp("MINUS", [resultTerm, Parser.parseTerm()])
 
-            Parser.tokens.selectNext()
-
         return resultTerm
 
     @staticmethod
@@ -754,7 +813,6 @@ class Parser:
         operadores = ["TIMES", "OVER"]
 
         resultFactor = Parser.parseFactor()
-        Parser.tokens.selectNext()
 
         while(Parser.tokens.actual.type in operadores):
             if(Parser.tokens.actual.type == "TIMES"):
@@ -767,14 +825,13 @@ class Parser:
                 resultFactor = BinOp(
                     "OVER", [resultFactor, Parser.parseFactor()])
 
-            Parser.tokens.selectNext()
-
         return resultFactor
 
     @staticmethod
     def parseFactor():
         if(Parser.tokens.actual.type == "INT"):
             resultFactor = Parser.tokens.actual.value
+            Parser.tokens.selectNext()
             return IntVal(resultFactor)
         elif(Parser.tokens.actual.type == "PLUS"):
             Parser.tokens.selectNext()
@@ -789,18 +846,21 @@ class Parser:
             Parser.tokens.selectNext()
             expression = Parser.parseOrexpr()
             if(Parser.tokens.actual.type == "RPAR"):
+                Parser.tokens.selectNext()
                 return expression
             else:
                 raise ValueError
         elif(Parser.tokens.actual.type == "IDENT"):
             resultFactor = Parser.tokens.actual.value
+            Parser.tokens.selectNext()
             return Identific(resultFactor)
         elif(Parser.tokens.actual.type == "READLINE"):
             Parser.tokens.selectNext()
             if(Parser.tokens.actual.type == "LPAR"):
                 Parser.tokens.selectNext()
                 if(Parser.tokens.actual.type == "RPAR"):
-                    return Readln("PRINT")
+                    Parser.tokens.selectNext()
+                    return Readln("READLINE")
                 else:
                     raise ValueError("Missing RPAR in READLN!")
             else:
@@ -811,9 +871,8 @@ class Parser:
     @staticmethod
     def run(origin):
         Parser.tokens = Tokenizer(PrePro.filter(origin))
-        commandList = Parser.parseBlock()
-        for instruction in commandList:
-            instruction.Evaluate()
+        statements = Parser.parseBlock()
+        statements.Evaluate()
 
 
 class PrePro:
@@ -836,7 +895,9 @@ class SymbolTable:
 
 
 if __name__ == "__main__":
-    # Parser.run("printlnn = 2;")
+    # Parser.run("{println(2);}")
     # print(dictGlobal)
+    # with open("./teste000.c", "r") as f:
     with open(sys.argv[1], "r") as f:
         Parser.run(f.read())
+
