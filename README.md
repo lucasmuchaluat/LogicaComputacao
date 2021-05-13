@@ -1,6 +1,12 @@
 # LogicaComputacao
 Repositório para disciplina Lógica da Computação 2021.1
 
+## Status dos Testes
+
+![git status](http://3.129.230.99/svg/lucasmuchaluat/LogicaComputacao/)
+
+## Projeto
+
 O projeto consiste em construir um programa que recebe como argumento uma cadeia de operações de números inteiros de múltiplos dígitos as realiza. 
 
 Para rodá-lo, basta inserir as operações a serem realizadas em um ```arquivo.c``` a sua escolha. Ele pode conter múltiplas expressões (soma, multiplicação, parênteses, comentários, etc), sem aspas, disposta entre linhas separadas por ";". A linguagem suporta identificadores (atribuições de variáveis) e prints. Segue exemplo abaixo:
