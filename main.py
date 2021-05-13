@@ -108,14 +108,10 @@ class While(Node):
 
 class If(Node):
     def Evaluate(self):
-        child1 = self.children[0].Evaluate()
-        child2 = self.children[1]
-        child3 = self.children[2]
-
-        if child1:
-            child2.Evaluate()
+        if self.children[0].Evaluate():
+            self.children[1].Evaluate()
         else:
-            child3.Evaluate()
+            self.children[2].Evaluate()
 
 
 class Token:
@@ -683,10 +679,7 @@ class Parser:
                 condition = Parser.parseOrexpr()
                 if(Parser.tokens.actual.type == "RPAR"):
                     Parser.tokens.selectNext()
-                    if(Parser.tokens.actual.type == "LKEY"):
-                        command = Parser.parseBlock()
-                    else:
-                        command = Parser.parseCommand()
+                    command = Parser.parseCommand()
                     order = While("WHILE", [condition, command])
                     return order
                 else:
@@ -700,14 +693,7 @@ class Parser:
                 condition = Parser.parseOrexpr()
                 if(Parser.tokens.actual.type == "RPAR"):
                     Parser.tokens.selectNext()
-                    if(Parser.tokens.actual.type == "LKEY"):
-                        command = Parser.parseBlock()
-                        if(Parser.tokens.actual.type == "RKEY"):
-                            Parser.tokens.selectNext()
-                        else:
-                            raise ValueError("Expecting a RKEY!")
-                    else:
-                        command = Parser.parseCommand()
+                    command = Parser.parseCommand()
                     if(Parser.tokens.actual.type == "ELSE"):
                         Parser.tokens.selectNext()
                         if(Parser.tokens.actual.type == "LKEY"):
@@ -897,7 +883,7 @@ class SymbolTable:
 if __name__ == "__main__":
     # Parser.run("{println(2);}")
     # print(dictGlobal)
-    # with open("./teste000.c", "r") as f:
-    with open(sys.argv[1], "r") as f:
+    with open("./teste000.c", "r") as f:
+    # with open(sys.argv[1], "r") as f:
         Parser.run(f.read())
 
