@@ -634,7 +634,6 @@ class Parser:
             while(Parser.tokens.actual.type != "RKEY" and Parser.tokens.actual.type != "EOF"):
                 order = Parser.parseCommand()
                 commandList.append(order)
-                Parser.tokens.selectNext()
             statements = NodeBlock("STAT", commandList)
             return statements
         else:
@@ -651,6 +650,7 @@ class Parser:
                 orexp = Parser.parseOrexpr()
                 order = Atribuicao("RECEBE", [variavel, orexp])
                 if(Parser.tokens.actual.type == "ENDLINE"):
+                    Parser.tokens.selectNext()
                     return order
                 else:
                     raise ValueError("Expecting PONTO VIRGULA!")
@@ -665,6 +665,7 @@ class Parser:
                     Parser.tokens.selectNext()
                     order = Println("PRINT", [orexp])
                     if(Parser.tokens.actual.type == "ENDLINE"):
+                        Parser.tokens.selectNext()
                         return order
                     else:
                         raise ValueError("Expecting PONTO VIRGULA!")
@@ -696,10 +697,7 @@ class Parser:
                     command = Parser.parseCommand()
                     if(Parser.tokens.actual.type == "ELSE"):
                         Parser.tokens.selectNext()
-                        if(Parser.tokens.actual.type == "LKEY"):
-                            commandElse = Parser.parseBlock()
-                        else:
-                            commandElse = Parser.parseCommand()
+                        commandElse = Parser.parseCommand()
                     else:
                         commandElse = NoOp(None)
                     order = If("IF", [condition, command, commandElse])
@@ -711,6 +709,7 @@ class Parser:
         else:
             if not Parser.tokens.actual.type == "ENDLINE":
                 order = Parser.parseBlock()
+            Parser.tokens.selectNext()
             return order
 
     @staticmethod
@@ -883,7 +882,7 @@ class SymbolTable:
 if __name__ == "__main__":
     # Parser.run("{println(2);}")
     # print(dictGlobal)
-    with open("./teste000.c", "r") as f:
-    # with open(sys.argv[1], "r") as f:
+    # with open("./teste000.c", "r") as f:
+    with open(sys.argv[1], "r") as f:
         Parser.run(f.read())
 
