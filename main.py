@@ -27,15 +27,15 @@ class BinOp(Node):
         elif self.value == "OVER":
             valorOp = child1 / child2
         elif self.value == "MAIOR":
-            valorOp = child1 > child2
+            valorOp = bool(child1 > child2)
         elif self.value == "MENOR":
-            valorOp = child1 < child2
+            valorOp = bool(child1 < child2)
         elif self.value == "EQUAL":
-            valorOp = child1 == child2
+            valorOp = bool(child1 == child2)
         elif self.value == "AND":
-            valorOp = child1 and child2
+            valorOp = bool(child1 and child2)
         elif self.value == "OR":
-            valorOp = child1 or child2
+            valorOp = bool(child1 or child2)
         else:
             raise ValueError("BinOp operation error")
 
@@ -48,7 +48,10 @@ class Atribuicao(Node):
 
         if self.value == "ISTYPE":
             child2 = self.children[1]
-            SymbolTable.setterType(child1, type_=child2)
+            if child1 not in dictGlobal.keys():
+                SymbolTable.setterType(child1, type_=child2)
+            else:
+                raise ValueError("Variavel already exists!")
 
         if self.value == "RECEBE":
             child2 = self.children[1].Evaluate()
@@ -664,7 +667,7 @@ class Tokenizer:
                 tokens_list.append(Token("EOF", "#"))
                 break
 
-            elif(caracter == "\n"):
+            elif(caracter == "\n" or caracter == "\t"):
                 continue
 
             elif(caracter in operadoresDuplos):
@@ -966,13 +969,16 @@ class SymbolTable:
     # SETTER VALUE
     @staticmethod
     def setterValue(key, value):
-        dictGlobal[key][0] = value
+        if dictGlobal[key][1] == "bool":
+            dictGlobal[key][0] = int(bool(value))
+        elif dictGlobal[key][1] == "int":
+            dictGlobal[key][0] = int(value)
 
 
 if __name__ == "__main__":
     # Parser.run("{println(2);}")
     # print(dictGlobal)
-    # with open("./teste000.c", "r") as f:
-    with open(sys.argv[1], "r") as f:
+    with open("./teste000.c", "r") as f:
+    # with open(sys.argv[1], "r") as f:
         Parser.run(f.read())
         # print(dictGlobal)
