@@ -972,7 +972,7 @@ class SymbolTable:
 if __name__ == "__main__":
     # Parser.run("{println(2);}")
     # print(dictGlobal)
-    with open("./teste000.c", "r") as f:
-        # with open(sys.argv[1], "r") as f:
+    # with open("./teste000.c", "r") as f:
+    with open(sys.argv[1], "r") as f:
         Parser.run(f.read())
         # print(dictGlobal)
