@@ -1,4 +1,2 @@
-a = 0
-while a < 3:
-    a += 1
-    print(a)
+x = "true"
+print(int(x == "true"))

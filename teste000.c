@@ -1,8 +1,9 @@
 
 
 {
-    if (0 >1)
-        println(1);
-    println(0);
+    int x;
+    x = 5;
+    bool y;
+    y = x && true;
+    println(y);
 }
-

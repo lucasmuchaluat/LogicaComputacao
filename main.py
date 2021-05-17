@@ -45,10 +45,14 @@ class BinOp(Node):
 class Atribuicao(Node):
     def Evaluate(self):
         child1 = self.children[0]
-        child2 = self.children[1].Evaluate()
+
+        if self.value == "ISTYPE":
+            child2 = self.children[1]
+            SymbolTable.setterType(child1, type_=child2)
 
         if self.value == "RECEBE":
-            SymbolTable.setter(child1, child2)
+            child2 = self.children[1].Evaluate()
+            SymbolTable.setterValue(child1, child2)
 
 
 class UnOp(Node):
@@ -69,6 +73,12 @@ class IntVal(Node):
     def Evaluate(self):
         valorInteiro = self.value
         return(valorInteiro)
+
+
+class BoolVal(Node):
+    def Evaluate(self):
+        valorBooleano = self.value
+        return(int(valorBooleano == "true"))
 
 
 class Identific(Node):
@@ -140,7 +150,8 @@ class Tokenizer:
         origin += "#"
         countPar = 0
         countKey = 0
-        palavrasReservadas = ["println", "readln", "while", "if", "else"]
+        palavrasReservadas = ["println", "readln",
+                              "while", "if", "else", "int", "bool", "true", "false"]
         operadoresDuplos = ["=", "&", "|"]
 
         for caracter in origin:
@@ -177,6 +188,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -207,6 +222,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -238,6 +257,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -269,6 +292,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -300,6 +327,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -332,6 +363,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -366,6 +401,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -398,6 +437,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -432,6 +475,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -463,6 +510,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -494,6 +545,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -525,6 +580,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -556,6 +615,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -591,6 +654,10 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -642,7 +709,21 @@ class Parser:
     @staticmethod
     def parseCommand():
         order = NoOp(None)
-        if(Parser.tokens.actual.type == "IDENT"):
+        if(Parser.tokens.actual.type == "TIPO"):
+            tipo = Parser.tokens.actual.value
+            Parser.tokens.selectNext()
+            if(Parser.tokens.actual.type == "IDENT"):
+                variavel = Parser.tokens.actual.value
+                order = Atribuicao("ISTYPE", [variavel, tipo])
+                Parser.tokens.selectNext()
+                if(Parser.tokens.actual.type == "ENDLINE"):
+                    Parser.tokens.selectNext()
+                    return order
+                else:
+                    raise ValueError("Expecting PONTO VIRGULA!")
+            else:
+                raise ValueError("Expecting a variable!")
+        elif(Parser.tokens.actual.type == "IDENT"):
             variavel = Parser.tokens.actual.value
             Parser.tokens.selectNext()
             if(Parser.tokens.actual.type == "RECEBE"):
@@ -818,6 +899,10 @@ class Parser:
             resultFactor = Parser.tokens.actual.value
             Parser.tokens.selectNext()
             return IntVal(resultFactor)
+        if(Parser.tokens.actual.type == "BOOL"):
+            resultFactor = Parser.tokens.actual.value
+            Parser.tokens.selectNext()
+            return BoolVal(resultFactor)
         elif(Parser.tokens.actual.type == "PLUS"):
             Parser.tokens.selectNext()
             return UnOp("PLUS", [Parser.parseFactor()])
@@ -871,18 +956,23 @@ class SymbolTable:
     # GETTER
     @staticmethod
     def getter(key):
-        return dictGlobal[key]
+        return dictGlobal[key][0]
 
-    # SETTER
+    # SETTER TYPE
     @staticmethod
-    def setter(key, value):
-        dictGlobal[key] = value
+    def setterType(key, value=None, type_=None):
+        dictGlobal[key] = [value, type_]
+
+    # SETTER VALUE
+    @staticmethod
+    def setterValue(key, value):
+        dictGlobal[key][0] = value
 
 
 if __name__ == "__main__":
     # Parser.run("{println(2);}")
     # print(dictGlobal)
-    # with open("./teste000.c", "r") as f:
-    with open(sys.argv[1], "r") as f:
+    with open("./teste000.c", "r") as f:
+        # with open(sys.argv[1], "r") as f:
         Parser.run(f.read())
-
+        # print(dictGlobal)
