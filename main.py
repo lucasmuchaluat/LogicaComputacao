@@ -824,6 +824,8 @@ class Parser:
             if(Parser.tokens.actual.type == "LPAR"):
                 Parser.tokens.selectNext()
                 condition = Parser.parseOrexpr()
+                if isinstance(condition, StringVal):
+                    raise ValueError("Condition must not be a string!")
                 if(Parser.tokens.actual.type == "RPAR"):
                     Parser.tokens.selectNext()
                     command = Parser.parseCommand()
@@ -838,6 +840,8 @@ class Parser:
             if(Parser.tokens.actual.type == "LPAR"):
                 Parser.tokens.selectNext()
                 condition = Parser.parseOrexpr()
+                if isinstance(condition, StringVal):
+                    raise ValueError("Condition must not be a string!")
                 if(Parser.tokens.actual.type == "RPAR"):
                     Parser.tokens.selectNext()
                     command = Parser.parseCommand()
