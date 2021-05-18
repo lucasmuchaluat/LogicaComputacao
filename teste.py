@@ -1,5 +1,4 @@
-x = "true"
-
-b = 2
-c = 689
-print(int(2))
+for e in range(5):
+    if e == 1 or e == 2:
+        continue
+    print("DEU CONTINUE")

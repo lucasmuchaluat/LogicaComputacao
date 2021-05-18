@@ -18,7 +18,11 @@ class BinOp(Node):
         child1 = self.children[0].Evaluate()
         child2 = self.children[1].Evaluate()
 
-        if self.value == "PLUS":
+        if self.value == "EQUAL":
+            valorOp = bool(child1 == child2)
+        elif isinstance(child1, str) or isinstance(child2, str):
+            raise ValueError("ERROR: Incompatible types!")
+        elif self.value == "PLUS":
             valorOp = child1 + child2
         elif self.value == "MINUS":
             valorOp = child1 - child2
@@ -30,8 +34,6 @@ class BinOp(Node):
             valorOp = bool(child1 > child2)
         elif self.value == "MENOR":
             valorOp = bool(child1 < child2)
-        elif self.value == "EQUAL":
-            valorOp = bool(child1 == child2)
         elif self.value == "AND":
             valorOp = bool(child1 and child2)
         elif self.value == "OR":
@@ -82,6 +84,12 @@ class BoolVal(Node):
     def Evaluate(self):
         valorBooleano = self.value
         return(int(valorBooleano == "true"))
+
+
+class StringVal(Node):
+    def Evaluate(self):
+        valorString = self.value
+        return(valorString)
 
 
 class Identific(Node):
@@ -153,8 +161,10 @@ class Tokenizer:
         origin += "#"
         countPar = 0
         countKey = 0
+        isString = 0
+        stringText = ""
         palavrasReservadas = ["println", "readln",
-                              "while", "if", "else", "int", "bool", "true", "false"]
+                              "while", "if", "else", "int", "bool", "string", "true", "false"]
         operadoresDuplos = ["=", "&", "|"]
 
         for caracter in origin:
@@ -162,10 +172,10 @@ class Tokenizer:
                 if identifier[0] == "_":
                     raise ValueError("Variavel Não pode começar com _!")
 
-            if(caracter.isdigit() and identifier == ""):
+            if(caracter.isdigit() and identifier == "" and stringText == ""):
                 numero += caracter
 
-            elif(caracter == " "):
+            elif(caracter == " " and isString == 0 and isString == 0):
                 if operadorDuplo:
                     if operadorDuplo == "=":
                         tokens_list.append(Token("RECEBE", operadorDuplo))
@@ -191,7 +201,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -199,7 +209,7 @@ class Tokenizer:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
 
-            elif(caracter == "+"):
+            elif(caracter == "+" and isString == 0):
                 if operadorDuplo:
                     if operadorDuplo == "=":
                         tokens_list.append(Token("RECEBE", operadorDuplo))
@@ -225,7 +235,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -234,7 +244,7 @@ class Tokenizer:
                     identifier = ""
                 tokens_list.append(Token("PLUS", "+"))
 
-            elif(caracter == "-"):
+            elif(caracter == "-" and isString == 0):
                 if operadorDuplo:
                     if operadorDuplo == "=":
                         tokens_list.append(Token("RECEBE", operadorDuplo))
@@ -260,7 +270,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -269,7 +279,7 @@ class Tokenizer:
                     identifier = ""
                 tokens_list.append(Token("MINUS", "-"))
 
-            elif(caracter == "*"):
+            elif(caracter == "*" and isString == 0):
                 if operadorDuplo:
                     if operadorDuplo == "=":
                         tokens_list.append(Token("RECEBE", operadorDuplo))
@@ -295,7 +305,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -304,7 +314,7 @@ class Tokenizer:
                     identifier = ""
                 tokens_list.append(Token("TIMES", "*"))
 
-            elif(caracter == "/"):
+            elif(caracter == "/" and isString == 0):
                 if operadorDuplo:
                     if operadorDuplo == "=":
                         tokens_list.append(Token("RECEBE", operadorDuplo))
@@ -330,7 +340,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -339,7 +349,7 @@ class Tokenizer:
                     identifier = ""
                 tokens_list.append(Token("OVER", "/"))
 
-            elif(caracter == "("):
+            elif(caracter == "(" and isString == 0):
                 countPar += 1
                 if operadorDuplo:
                     if operadorDuplo == "=":
@@ -366,7 +376,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -375,7 +385,7 @@ class Tokenizer:
                     identifier = ""
                 tokens_list.append(Token("LPAR", "("))
 
-            elif(caracter == ")"):
+            elif(caracter == ")" and isString == 0):
                 countPar -= 1
                 if countPar < 0:
                     raise ValueError("Desbalanceamento de parenteses!")
@@ -404,7 +414,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -413,7 +423,7 @@ class Tokenizer:
                     identifier = ""
                 tokens_list.append(Token("RPAR", ")"))
 
-            elif(caracter == "{"):
+            elif(caracter == "{" and isString == 0):
                 countKey += 1
                 if operadorDuplo:
                     if operadorDuplo == "=":
@@ -440,7 +450,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -449,7 +459,7 @@ class Tokenizer:
                     identifier = ""
                 tokens_list.append(Token("LKEY", "{"))
 
-            elif(caracter == "}"):
+            elif(caracter == "}" and isString == 0):
                 countKey -= 1
                 if countKey < 0:
                     raise ValueError("Desbalanceamento de chaves!")
@@ -478,7 +488,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -487,7 +497,7 @@ class Tokenizer:
                     identifier = ""
                 tokens_list.append(Token("RKEY", "}"))
 
-            elif(caracter == ";"):
+            elif(caracter == ";" and isString == 0):
                 if operadorDuplo:
                     if operadorDuplo == "=":
                         tokens_list.append(Token("RECEBE", operadorDuplo))
@@ -513,7 +523,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -522,7 +532,7 @@ class Tokenizer:
                     identifier = ""
                 tokens_list.append(Token("ENDLINE", ";"))
 
-            elif(caracter == ">"):
+            elif(caracter == ">" and isString == 0):
                 if operadorDuplo:
                     if operadorDuplo == "=":
                         tokens_list.append(Token("RECEBE", operadorDuplo))
@@ -548,7 +558,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -557,7 +567,7 @@ class Tokenizer:
                     identifier = ""
                 tokens_list.append(Token("MAIOR", ">"))
 
-            elif(caracter == "<"):
+            elif(caracter == "<" and isString == 0):
                 if operadorDuplo:
                     if operadorDuplo == "=":
                         tokens_list.append(Token("RECEBE", operadorDuplo))
@@ -583,7 +593,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -592,7 +602,7 @@ class Tokenizer:
                     identifier = ""
                 tokens_list.append(Token("MENOR", "<"))
 
-            elif(caracter == "!"):
+            elif(caracter == "!" and isString == 0):
                 if operadorDuplo:
                     if operadorDuplo == "=":
                         tokens_list.append(Token("RECEBE", operadorDuplo))
@@ -618,7 +628,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -627,7 +637,7 @@ class Tokenizer:
                     identifier = ""
                 tokens_list.append(Token("NOT", "!"))
 
-            elif(caracter == "#"):
+            elif(caracter == "#" and isString == 0):
                 if countPar != 0:
                     raise ValueError("Desbalanceamento de parenteses!")
                 if countKey != 0:
@@ -657,7 +667,7 @@ class Tokenizer:
                             tokens_list.append(Token("IF", identifier))
                         elif identifier == "else":
                             tokens_list.append(Token("ELSE", identifier))
-                        elif identifier == "int" or identifier == "bool":
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
@@ -667,10 +677,10 @@ class Tokenizer:
                 tokens_list.append(Token("EOF", "#"))
                 break
 
-            elif(caracter == "\n" or caracter == "\t"):
+            elif(caracter == "\n" or caracter == "\t" and isString == 0):
                 continue
 
-            elif(caracter in operadoresDuplos):
+            elif(caracter in operadoresDuplos and isString == 0):
                 if numero:
                     tokens_list.append(Token("INT", int(numero)))
                     numero = ""
@@ -680,15 +690,67 @@ class Tokenizer:
                             tokens_list.append(Token("PRINT", identifier))
                         elif identifier == "readln":
                             tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
                 operadorDuplo += caracter
-
+            elif(caracter == '"'):
+                if isString:
+                    isString -= 1
+                    tokens_list.append(Token("STRING", stringText))
+                    stringText = ""
+                else:
+                    isString += 1
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
+                tokens_list.append(Token("ASPAS", '"'))
             else:
-                identifier += caracter
+                if isString:
+                    stringText += caracter
+                else:
+                    identifier += caracter
         # for e in tokens_list:
-        #     print(e.value)
+        #     print(e.type)
         return tokens_list
 
 
@@ -902,7 +964,7 @@ class Parser:
             resultFactor = Parser.tokens.actual.value
             Parser.tokens.selectNext()
             return IntVal(resultFactor)
-        if(Parser.tokens.actual.type == "BOOL"):
+        elif(Parser.tokens.actual.type == "BOOL"):
             resultFactor = Parser.tokens.actual.value
             Parser.tokens.selectNext()
             return BoolVal(resultFactor)
@@ -938,6 +1000,15 @@ class Parser:
                     raise ValueError("Missing RPAR in READLN!")
             else:
                 raise ValueError("Missing LPAR in READLN!")
+        elif(Parser.tokens.actual.type == "ASPAS"):
+            Parser.tokens.selectNext()
+            resultFactor = Parser.tokens.actual.value
+            Parser.tokens.selectNext()
+            if(Parser.tokens.actual.type == "ASPAS"):
+                Parser.tokens.selectNext()
+                return StringVal(resultFactor)
+            else:
+                raise ValueError('Expecting closing "!')
         else:
             raise ValueError
 
@@ -973,12 +1044,11 @@ class SymbolTable:
             dictGlobal[key][0] = int(bool(value))
         elif dictGlobal[key][1] == "int":
             dictGlobal[key][0] = int(value)
+        elif dictGlobal[key][1] == "string":
+            dictGlobal[key][0] = value
 
 
 if __name__ == "__main__":
-    # Parser.run("{println(2);}")
-    # print(dictGlobal)
     # with open("./teste000.c", "r") as f:
     with open(sys.argv[1], "r") as f:
         Parser.run(f.read())
-        # print(dictGlobal)
