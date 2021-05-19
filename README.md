@@ -28,7 +28,8 @@ EBNF:
 
 ```
 BLOCK = "{", { COMMAND }, "}" ;
-COMMAND = ( λ | ASSIGNMENT | PRINT | WHILE | IF | BLOCK ), ";" ;
+COMMAND = ( λ | ASSIGNMENT | PRINT | WHILE | IF | BLOCK | TYPE ), ";" ;
+TYPE = ( "int" | "bool" | "string" ), IDENTIFIER ; 
 ASSIGNMENT = IDENTIFIER, "=", OREXPR ;
 PRINT = "println", "(", OREXPR, ")" ;
 WHILE = "while", "(", OREXPR, ")", "{", COMMAND, "}" ;
@@ -39,7 +40,8 @@ EQEXPR = RELEXPR, { "==", RELEXPR } ;
 RELEXPR = EXPRESSION, { (">" | "<"), EXPRESSION } ;
 EXPRESSION = TERM, { ("+" | "-"), TERM } ;
 TERM = FACTOR, { ("*" | "/"), FACTOR } ;
-FACTOR = (("+" | "-" | "!"), FACTOR) | NUMBER | "(", OREXPR, ")" | IDENTIFIER | READLINE ;
+FACTOR = (("+" | "-" | "!"), FACTOR) | NUMBER | "(", OREXPR, ")" | IDENTIFIER | READLINE | BOOL | '"', STRING, '"';
+BOOL = "true" | "false"
 IDENTIFIER = LETTER, { LETTER | DIGIT | "_" } ;
 READLINE = "readln", "(", ")" ;
 NUMBER = DIGIT, { DIGIT } ;
@@ -52,3 +54,7 @@ Além de parênteses, o programa suporta o uso de comentários na expressão tam
 ```
 x = (3+2)/5 /* comentário */
 ```
+
+## Diagrama Sintático
+
+![alt text](https://raw.githubusercontent.com/lucasmuchaluat/LogicaComputacao/master/DiagramaSintatico.png?token=AJGGNGRWMKEYQHK6MMNZ3CDAVWHT2)
