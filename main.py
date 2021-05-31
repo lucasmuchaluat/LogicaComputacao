@@ -5,9 +5,13 @@ dictGlobal = {}
 
 
 class Node:
+    idNode = 0
+
     def __init__(self, valorNode, nodeList=[]):
         self.value = valorNode
         self.children = nodeList
+        self.idNode = Node.idNode
+        Node.idNode += 1
 
     def Evaluate(self):
         pass
@@ -18,26 +22,56 @@ class BinOp(Node):
         child1 = self.children[0].Evaluate()
         child2 = self.children[1].Evaluate()
 
+        print("; codigo gerado pelo BinOp")
+        print("PUSH EBX")
+
         if self.value == "EQUAL":
             valorOp = bool(child1 == child2)
+            print("POP EAX")
+            print("CMP EAX, EBX")
+            print("CALL binop_je")
         elif isinstance(child1, str) or isinstance(child2, str):
             raise ValueError("ERROR: Incompatible types!")
         elif self.value == "PLUS":
             valorOp = child1 + child2
+            print("POP EAX")
+            print("ADD EAX, EBX")
+            print("MOV EBX, EAX")
         elif self.value == "MINUS":
             valorOp = child1 - child2
+            print("POP EAX")
+            print("SUB EAX, EBX")
+            print("MOV EBX, EAX")
         elif self.value == "TIMES":
             valorOp = child1 * child2
+            print("POP EAX")
+            print("IMUL EAX, EBX")
+            print("MOV EBX, EAX")
         elif self.value == "OVER":
             valorOp = child1 / child2
+            print("POP EAX")
+            print("IDIV EAX, EBX")
+            print("MOV EBX, EAX")
         elif self.value == "MAIOR":
             valorOp = bool(child1 > child2)
+            print("POP EAX")
+            print("CMP EAX, EBX")
+            print("CALL binop_jg")
         elif self.value == "MENOR":
             valorOp = bool(child1 < child2)
+            print("POP EAX")
+            print("CMP EAX, EBX")
+            print("CALL binop_jl")
         elif self.value == "AND":
             valorOp = bool(child1 and child2)
+            print("POP EAX")
+            print("AND EAX, EBX")
+            print("MOV EBX, EAX")
         elif self.value == "OR":
             valorOp = bool(child1 or child2)
+            print("POP EAX")
+            print("OR EAX, EBX")
+            print("MOV EBX, EAX")
         else:
             raise ValueError("BinOp operation error")
 
@@ -64,12 +98,21 @@ class UnOp(Node):
     def Evaluate(self):
         child1 = self.children[0].Evaluate()
 
+        print("; codigo gerado pelo UnOp")
+
         if self.value == "PLUS":
             valorOp = child1
+            print("PASS")
         elif self.value == "MINUS":
             valorOp = -child1
+            print("POP EAX")
+            print("NEG EBX")
+            print("MOV EBX, EAX")
         elif self.value == "NOT":
             valorOp = not child1
+            print("POP EAX")
+            print("NOT EBX")
+            print("MOV EBX, EAX")
 
         return int(valorOp)
 
@@ -77,13 +120,22 @@ class UnOp(Node):
 class IntVal(Node):
     def Evaluate(self):
         valorInteiro = self.value
+
+        print("; codigo gerado pelo IntVal")
+        print(f"MOV EBX, {valorInteiro}")
+
         return(valorInteiro)
 
 
 class BoolVal(Node):
     def Evaluate(self):
         valorBooleano = self.value
-        return(int(valorBooleano == "true"))
+        inteiroBooleano = int(valorBooleano == "true")
+
+        print("; codigo gerado pelo BoolVal")
+        print(f"MOV EBX, {inteiroBooleano}")
+
+        return(inteiroBooleano)
 
 
 class StringVal(Node):
@@ -106,7 +158,11 @@ class NoOp(Node):
 class Println(Node):
     def Evaluate(self):
         child1 = self.children[0].Evaluate()
-        print(child1)
+        # print(child1)
+        print("PUSH EBP")
+        print("MOV EBP, ESP")
+        print("MOV EAX, [EBP+8]")
+        print("XOR ESI , ESI")
 
 
 class Readln(Node):
@@ -123,16 +179,32 @@ class NodeBlock(Node):
 
 class While(Node):
     def Evaluate(self):
-        while self.children[0].Evaluate():
-            self.children[1].Evaluate()
+        # while self.children[0].Evaluate():
+        #     self.children[1].Evaluate()
+        print(f"LOOP_{Node.idNode}:")
+        self.children[0].Evaluate()
+        print("CMP EBX, False")
+        print("JE EXIT_34")
+        self.children[1].Evaluate()
+        print("JMP LOOP_34")
+        print("EXIT_34:")
 
 
 class If(Node):
     def Evaluate(self):
-        if self.children[0].Evaluate():
-            self.children[1].Evaluate()
-        else:
-            self.children[2].Evaluate()
+        # if self.children[0].Evaluate():
+        #     self.children[1].Evaluate()
+        # else:
+        #     self.children[2].Evaluate()
+        print(f"IF_{Node.idNode}:")
+        self.children[0].Evaluate()
+        print("CMP EBX, False")
+        print(f"JE ELSE_{Node.idNode}")
+        self.children[1].Evaluate()
+        print(f"JMP EXIT_{Node.idNode}")
+        print(f"ELSE_{Node.idNode}:")
+        self.children[2].Evaluate()
+        print(f"EXIT_{Node.idNode}")
 
 
 class Token:
