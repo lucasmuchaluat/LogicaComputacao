@@ -2,6 +2,92 @@ import sys
 import re
 
 dictGlobal = {}
+mem4 = 4
+
+print('''
+; constantes
+SYS_EXIT equ 1
+SYS_READ equ 3
+SYS_WRITE equ 4
+STDIN equ 0
+STDOUT equ 1
+True equ 1
+False equ 0
+
+segment .data
+
+segment .bss  ; variaveis
+  res RESB 1
+
+section .text
+  global _start
+
+print:  ; subrotina print
+
+  PUSH EBP ; guarda o base pointer
+  MOV EBP, ESP ; estabelece um novo base pointer
+
+  MOV EAX, [EBP+8] ; 1 argumento antes do RET e EBP
+  XOR ESI, ESI
+
+print_dec: ; empilha todos os digitos
+  MOV EDX, 0
+  MOV EBX, 0x000A
+  DIV EBX
+  ADD EDX, '0'
+  PUSH EDX
+  INC ESI ; contador de digitos
+  CMP EAX, 0
+  JZ print_next ; quando acabar pula
+  JMP print_dec
+
+print_next:
+  CMP ESI, 0
+  JZ print_exit ; quando acabar de imprimir
+  DEC ESI
+
+  MOV EAX, SYS_WRITE
+  MOV EBX, STDOUT
+
+  POP ECX
+  MOV [res], ECX
+  MOV ECX, res
+
+  MOV EDX, 1
+  INT 0x80
+  JMP print_next
+
+print_exit:
+  POP EBP
+  RET
+
+; subrotinas if/while
+binop_je:
+  JE binop_true
+  JMP binop_false
+
+binop_jg:
+  JG binop_true
+  JMP binop_false
+
+binop_jl:
+  JL binop_true
+  JMP binop_false
+
+binop_false:
+  MOV EBX, False
+  JMP binop_exit
+binop_true:
+  MOV EBX, True
+binop_exit:
+  RET
+
+_start:
+
+  PUSH EBP ; guarda o base pointer
+  MOV EBP, ESP ; estabelece um novo base pointer
+
+; codigo gerado pelo compilador''')
 
 
 class Node:
@@ -20,10 +106,10 @@ class Node:
 class BinOp(Node):
     def Evaluate(self):
         child1 = self.children[0].Evaluate()
+        print("PUSH EBX")
         child2 = self.children[1].Evaluate()
 
         print("; codigo gerado pelo BinOp")
-        print("PUSH EBX")
 
         if self.value == "EQUAL":
             valorOp = bool(child1 == child2)
@@ -45,12 +131,12 @@ class BinOp(Node):
         elif self.value == "TIMES":
             valorOp = child1 * child2
             print("POP EAX")
-            print("IMUL EAX, EBX")
+            print("IMUL EBX")
             print("MOV EBX, EAX")
         elif self.value == "OVER":
             valorOp = child1 / child2
             print("POP EAX")
-            print("IDIV EAX, EBX")
+            print("IDIV EBX")
             print("MOV EBX, EAX")
         elif self.value == "MAIOR":
             valorOp = bool(child1 > child2)
@@ -80,18 +166,25 @@ class BinOp(Node):
 
 class Atribuicao(Node):
     def Evaluate(self):
+        global mem4
         child1 = self.children[0]
 
         if self.value == "ISTYPE":
+            print(f"; Atribuicao de {child1}")
+            print("PUSH DWORD 0")
             child2 = self.children[1]
             if child1 not in dictGlobal.keys():
-                SymbolTable.setterType(child1, type_=child2)
+                SymbolTable.setterType(child1, type_=child2, address=mem4)
+                mem4 += 4
             else:
                 raise ValueError("Variavel already exists!")
 
         if self.value == "RECEBE":
             child2 = self.children[1].Evaluate()
             SymbolTable.setterValue(child1, child2)
+            addressVar = SymbolTable.getterAddress(child1)
+
+            print(f"MOV [EBP-{addressVar}], EBX")
 
 
 class UnOp(Node):
@@ -147,6 +240,8 @@ class StringVal(Node):
 class Identific(Node):
     def Evaluate(self):
         valorVariavel = SymbolTable.getter(self.value)
+        addressVar = SymbolTable.getterAddress(self.value)
+        print(f"MOV EBX, [EBP-{addressVar}]")
         return(valorVariavel)
 
 
@@ -159,10 +254,9 @@ class Println(Node):
     def Evaluate(self):
         child1 = self.children[0].Evaluate()
         # print(child1)
-        print("PUSH EBP")
-        print("MOV EBP, ESP")
-        print("MOV EAX, [EBP+8]")
-        print("XOR ESI , ESI")
+        print("PUSH EBX")
+        print("CALL print")
+        print("POP EBX")
 
 
 class Readln(Node):
@@ -184,10 +278,10 @@ class While(Node):
         print(f"LOOP_{Node.idNode}:")
         self.children[0].Evaluate()
         print("CMP EBX, False")
-        print("JE EXIT_34")
+        print(f"JE EXIT_{Node.idNode}")
         self.children[1].Evaluate()
-        print("JMP LOOP_34")
-        print("EXIT_34:")
+        print(f"JMP LOOP_{Node.idNode}")
+        print(f"EXIT_{Node.idNode}:")
 
 
 class If(Node):
@@ -1108,10 +1202,14 @@ class SymbolTable:
     def getter(key):
         return dictGlobal[key][0]
 
+    @staticmethod
+    def getterAddress(key):
+        return dictGlobal[key][2]
+
     # SETTER TYPE
     @staticmethod
-    def setterType(key, value=None, type_=None):
-        dictGlobal[key] = [value, type_]
+    def setterType(key, value=None, type_=None, address=None):
+        dictGlobal[key] = [value, type_, address]
 
     # SETTER VALUE
     @staticmethod
@@ -1125,6 +1223,11 @@ class SymbolTable:
 
 
 if __name__ == "__main__":
-    # with open("./teste000.c", "r") as f:
-    with open(sys.argv[1], "r") as f:
+    with open("./teste000.c", "r") as f:
+        # with open(sys.argv[1], "r") as f:
         Parser.run(f.read())
+        print(''' 
+; interrupcao de saida
+POP EBP
+MOV EAX, 1
+INT 0x80''')
