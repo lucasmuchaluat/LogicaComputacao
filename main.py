@@ -991,12 +991,12 @@ class Parser:
                     raise ValueError("Expecting PONTO VIRGULA!")
             elif(Parser.tokens.actual.type == "LPAR"):
                 Parser.tokens.selectNext()
-                parameters = [nome]
+                parameters = []
                 while(Parser.tokens.actual.type != "RPAR"):
                     parameters.append(Parser.parseOrexpr())
                     if(Parser.tokens.actual.type == "VIRGULA"):
                         Parser.tokens.selectNext()
-                order = FuncCall("FCALL", parameters)
+                order = FuncCall(nome, parameters)
                 Parser.tokens.selectNext()
                 if(Parser.tokens.actual.type == "ENDLINE"):
                     Parser.tokens.selectNext()
@@ -1290,6 +1290,6 @@ class FuncTable:
 
 
 if __name__ == "__main__":
-    # with open("./teste000.c", "r") as f:
-    with open(sys.argv[1], "r") as f:
+    with open("./teste000.c", "r") as f:
+        # with open(sys.argv[1], "r") as f:
         Parser.run(f.read())
