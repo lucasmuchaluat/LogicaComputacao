@@ -275,13 +275,13 @@ class While(Node):
     def Evaluate(self):
         # while self.children[0].Evaluate():
         #     self.children[1].Evaluate()
-        print(f"LOOP_{Node.idNode}:")
+        print(f"LOOP_{self.idNode}:")
         self.children[0].Evaluate()
         print("CMP EBX, False")
-        print(f"JE EXIT_{Node.idNode}")
+        print(f"JE EXIT_{self.idNode}")
         self.children[1].Evaluate()
-        print(f"JMP LOOP_{Node.idNode}")
-        print(f"EXIT_{Node.idNode}:")
+        print(f"JMP LOOP_{self.idNode}")
+        print(f"EXIT_{self.idNode}:")
 
 
 class If(Node):
@@ -290,15 +290,15 @@ class If(Node):
         #     self.children[1].Evaluate()
         # else:
         #     self.children[2].Evaluate()
-        print(f"IF_{Node.idNode}:")
+        print(f"IF_{self.idNode}:")
         self.children[0].Evaluate()
         print("CMP EBX, False")
-        print(f"JE ELSE_{Node.idNode}")
+        print(f"JE ELSE_{self.idNode}")
         self.children[1].Evaluate()
-        print(f"JMP EXIT_{Node.idNode}")
-        print(f"ELSE_{Node.idNode}:")
+        print(f"JMP EXIT_{self.idNode}")
+        print(f"ELSE_{self.idNode}:")
         self.children[2].Evaluate()
-        print(f"EXIT_{Node.idNode}")
+        print(f"EXIT_{self.idNode}")
 
 
 class Token:
