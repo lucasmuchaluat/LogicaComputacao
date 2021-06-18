@@ -1223,8 +1223,8 @@ class SymbolTable:
 
 
 if __name__ == "__main__":
-    with open("./teste000.c", "r") as f:
-        # with open(sys.argv[1], "r") as f:
+    # with open("./teste000.c", "r") as f:
+    with open(sys.argv[1], "r") as f:
         Parser.run(f.read())
         print(''' 
 ; interrupcao de saida

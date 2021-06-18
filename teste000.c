@@ -1,14 +1,20 @@
 {
-    int i;
-    int n;
-    int f;
-    n = 5;
-    i = 2;
-    f = 1;
-    while (i < n + 1)
+    int x;
+    x = 3 + 1;
+
+    while (x < 5)
     {
-        f = f * i;
-        i = i + 1;
+        x = x + 1;
     }
-    println(f);
+
+    println(x);
+
+    if (x > 10)
+    {
+        println(11);
+    }
+    else
+    {
+        println(9);
+    }
 }
