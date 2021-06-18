@@ -1,7 +1,7 @@
 import sys
 import re
 
-dictGlobal = {}
+funcGlobal = {}
 
 
 class Node:
@@ -14,9 +14,9 @@ class Node:
 
 
 class BinOp(Node):
-    def Evaluate(self):
-        child1 = self.children[0].Evaluate()
-        child2 = self.children[1].Evaluate()
+    def Evaluate(self, symbolTable):
+        child1 = self.children[0].Evaluate(symbolTable)
+        child2 = self.children[1].Evaluate(symbolTable)
 
         if self.value == "EQUAL":
             valorOp = bool(child1 == child2)
@@ -45,24 +45,24 @@ class BinOp(Node):
 
 
 class Atribuicao(Node):
-    def Evaluate(self):
+    def Evaluate(self, symbolTable):
         child1 = self.children[0]
 
         if self.value == "ISTYPE":
             child2 = self.children[1]
-            if child1 not in dictGlobal.keys():
-                SymbolTable.setterType(child1, type_=child2)
+            if child1 not in symbolTable.keys():
+                SymbolTable.setterType(symbolTable, child1, type_=child2)
             else:
                 raise ValueError("Variavel already exists!")
 
         if self.value == "RECEBE":
-            child2 = self.children[1].Evaluate()
-            SymbolTable.setterValue(child1, child2)
+            child2 = self.children[1].Evaluate(symbolTable)
+            SymbolTable.setterValue(symbolTable, child1, child2)
 
 
 class UnOp(Node):
-    def Evaluate(self):
-        child1 = self.children[0].Evaluate()
+    def Evaluate(self, symbolTable):
+        child1 = self.children[0].Evaluate(symbolTable)
 
         if self.value == "PLUS":
             valorOp = child1
@@ -75,64 +75,131 @@ class UnOp(Node):
 
 
 class IntVal(Node):
-    def Evaluate(self):
+    def Evaluate(self, symbolTable):
         valorInteiro = self.value
         return(valorInteiro)
 
 
 class BoolVal(Node):
-    def Evaluate(self):
+    def Evaluate(self, symbolTable):
         valorBooleano = self.value
         return(int(valorBooleano == "true"))
 
 
 class StringVal(Node):
-    def Evaluate(self):
+    def Evaluate(self, symbolTable):
         valorString = self.value
         return(valorString)
 
 
 class Identific(Node):
-    def Evaluate(self):
-        valorVariavel = SymbolTable.getter(self.value)
+    def Evaluate(self, symbolTable):
+        valorVariavel = SymbolTable.getter(symbolTable, self.value)[0]
         return(valorVariavel)
 
 
 class NoOp(Node):
-    def Evaluate(self):
+    def Evaluate(self, symbolTable):
         return
 
 
 class Println(Node):
-    def Evaluate(self):
-        child1 = self.children[0].Evaluate()
+    def Evaluate(self, symbolTable):
+        child1 = self.children[0].Evaluate(symbolTable)
         print(child1)
 
 
 class Readln(Node):
-    def Evaluate(self):
+    def Evaluate(self, symbolTable):
         valorInputado = input()
         return int(valorInputado)
 
 
 class NodeBlock(Node):
-    def Evaluate(self):
+    def Evaluate(self, symbolTable):
         for child in self.children:
-            child.Evaluate()
+            child.Evaluate(symbolTable)
+            try:
+                value = SymbolTable.getter(symbolTable, "return")[0]
+                break
+            except:
+                pass
 
 
 class While(Node):
-    def Evaluate(self):
-        while self.children[0].Evaluate():
-            self.children[1].Evaluate()
+    def Evaluate(self, symbolTable):
+        while self.children[0].Evaluate(symbolTable):
+            self.children[1].Evaluate(symbolTable)
 
 
 class If(Node):
-    def Evaluate(self):
-        if self.children[0].Evaluate():
-            self.children[1].Evaluate()
+    def Evaluate(self, symbolTable):
+        if self.children[0].Evaluate(symbolTable):
+            self.children[1].Evaluate(symbolTable)
         else:
-            self.children[2].Evaluate()
+            self.children[2].Evaluate(symbolTable)
+
+
+class AllFunctions(Node):
+    def Evaluate(self, symbolTable):
+        for func in self.children:
+            func.Evaluate(symbolTable)
+        return FuncCall("main").Evaluate(symbolTable)
+
+
+class FuncDec(Node):
+    def Evaluate(self, symbolTable):
+        funcType = self.children[0]
+        funcName = self.children[1]
+        fungArgs = self.children[2]
+        funcBody = self.children[3]
+        try:
+            FuncTable.getter(funcName)
+        except:
+            FuncTable.setter(key=funcName, args=fungArgs,
+                             type_=funcType, body=funcBody)
+
+
+class FuncCall(Node):
+    def Evaluate(self, symbolTable):
+        funcName = self.value
+        funcTable = {}
+        args, type_, body = FuncTable.getter(funcName)
+        if(len(args) != len(self.children)):
+            raise ValueError(
+                "Argumentos não batem com os passados como parametro!")
+        else:
+            for i in range(len(self.children)):
+                value = self.children[i].Evaluate(symbolTable)
+                try:
+                    valueType = SymbolTable.getter(
+                        symbolTable, self.children[i].value)[1]
+                except:
+                    valueType = type(value).__name__
+                if(args[i][0] != valueType):
+                    raise ValueError(
+                        "Tipos dos parametros passados não batem com os argumentos da funcao!")
+                SymbolTable.setterType(funcTable, args[i][1], type_=args[i][0])
+                SymbolTable.setterValue(funcTable, args[i][1], value)
+            body.Evaluate(funcTable)
+            try:
+                functReturn = SymbolTable.getter(funcTable, "return")[0]
+                if(type_ == "int"):
+                    return int(functReturn)
+                elif(type_ == "bool"):
+                    return bool(int(functReturn == "True"))
+                elif(type_ == "string"):
+                    return str(functReturn)
+            except:
+                return
+
+
+class Return(Node):
+    def Evaluate(self, symbolTable):
+        child1 = self.children[0].Evaluate(symbolTable)
+        returnType = type(child1).__name__
+        SymbolTable.setterType(symbolTable, "return", type_=returnType)
+        SymbolTable.setterValue(symbolTable, "return", child1)
 
 
 class Token:
@@ -152,7 +219,7 @@ class Tokenizer:
         self.position += 1
         self.actual = self.tokens[self.position]
 
-    @staticmethod
+    @ staticmethod
     def montador(origin):
         tokens_list = []
         numero = ""
@@ -164,7 +231,7 @@ class Tokenizer:
         isString = 0
         stringText = ""
         palavrasReservadas = ["println", "readln",
-                              "while", "if", "else", "int", "bool", "string", "true", "false"]
+                              "while", "if", "else", "int", "bool", "string", "true", "false", "return"]
         operadoresDuplos = ["=", "&", "|"]
 
         for caracter in origin:
@@ -175,7 +242,7 @@ class Tokenizer:
             if(caracter.isdigit() and identifier == "" and stringText == ""):
                 numero += caracter
 
-            elif(caracter == " " and isString == 0 and isString == 0):
+            elif(caracter == " " and isString == 0):
                 if operadorDuplo:
                     if operadorDuplo == "=":
                         tokens_list.append(Token("RECEBE", operadorDuplo))
@@ -205,6 +272,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -239,6 +308,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -274,6 +345,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -309,6 +382,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -344,6 +419,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -380,6 +457,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -418,6 +497,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -454,6 +535,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -492,6 +575,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -527,6 +612,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -562,6 +649,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -597,6 +686,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -632,10 +723,49 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
                 tokens_list.append(Token("NOT", "!"))
+
+            elif(caracter == "," and isString == 0):
+                if operadorDuplo:
+                    if operadorDuplo == "=":
+                        tokens_list.append(Token("RECEBE", operadorDuplo))
+                    elif operadorDuplo == "==":
+                        tokens_list.append(Token("EQUAL", operadorDuplo))
+                    elif operadorDuplo == "&&":
+                        tokens_list.append(Token("AND", operadorDuplo))
+                    elif operadorDuplo == "||":
+                        tokens_list.append(Token("OR", operadorDuplo))
+                    operadorDuplo = ""
+                if numero:
+                    tokens_list.append(Token("INT", int(numero)))
+                    numero = ""
+                if identifier:
+                    if identifier in palavrasReservadas:
+                        if identifier == "println":
+                            tokens_list.append(Token("PRINT", identifier))
+                        elif identifier == "readln":
+                            tokens_list.append(Token("READLINE", identifier))
+                        elif identifier == "while":
+                            tokens_list.append(Token("WHILE", identifier))
+                        elif identifier == "if":
+                            tokens_list.append(Token("IF", identifier))
+                        elif identifier == "else":
+                            tokens_list.append(Token("ELSE", identifier))
+                        elif identifier == "int" or identifier == "bool" or identifier == "string":
+                            tokens_list.append(Token("TIPO", identifier))
+                        elif identifier == "true" or identifier == "false":
+                            tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
+                    else:
+                        tokens_list.append(Token("IDENT", identifier))
+                    identifier = ""
+                tokens_list.append(Token("VIRGULA", ","))
 
             elif(caracter == "#" and isString == 0):
                 if countPar != 0:
@@ -671,6 +801,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -700,6 +832,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -740,6 +874,8 @@ class Tokenizer:
                             tokens_list.append(Token("TIPO", identifier))
                         elif identifier == "true" or identifier == "false":
                             tokens_list.append(Token("BOOL", identifier))
+                        elif identifier == "return":
+                            tokens_list.append(Token("RETURN", identifier))
                     else:
                         tokens_list.append(Token("IDENT", identifier))
                     identifier = ""
@@ -758,7 +894,60 @@ class Parser:
     def __init__(self):
         self.tokens = None
 
-    @staticmethod
+    @ staticmethod
+    def parseFunctions():
+        functions = []
+        while(Parser.tokens.actual.type == "TIPO"):
+            functions.append(Parser.parseFuncDefBlock())
+
+        return AllFunctions("Functions", functions)
+
+    @ staticmethod
+    def parseFuncDefBlock():
+        funcScript = NoOp(None)
+        if(Parser.tokens.actual.type == "TIPO"):
+            funcTipo = Parser.tokens.actual.value
+            Parser.tokens.selectNext()
+            if(Parser.tokens.actual.type == "IDENT"):
+                funcName = Parser.tokens.actual.value
+                vardecChildren = [funcTipo, funcName]
+                Parser.tokens.selectNext()
+                if(Parser.tokens.actual.type == "LPAR"):
+                    Parser.tokens.selectNext()
+                    argumentos = []
+                    while(Parser.tokens.actual.type != "RPAR"):
+                        if(Parser.tokens.actual.type == "TIPO"):
+                            tipoVariavel = Parser.tokens.actual.value
+                            Parser.tokens.selectNext()
+                            if(Parser.tokens.actual.type == "IDENT"):
+                                nomeVariavel = Parser.tokens.actual.value
+                                argumentos.append([tipoVariavel, nomeVariavel])
+                                Parser.tokens.selectNext()
+                                if(Parser.tokens.actual.type == "RPAR"):
+                                    break
+                                if(Parser.tokens.actual.type == "VIRGULA"):
+                                    Parser.tokens.selectNext()
+                                else:
+                                    raise ValueError(
+                                        "Expecting virgula between parameters!")
+                            else:
+                                raise ValueError(
+                                    "Expecting parameter name after type!")
+                        else:
+                            raise ValueError(
+                                "Expecting type before passing parameter!")
+                    vardecChildren.append(argumentos)
+                    Parser.tokens.selectNext()
+                    funcBody = Parser.parseCommand()
+                    vardecChildren.append(funcBody)
+                    funcScript = FuncDec("FUNCTION", vardecChildren)
+                else:
+                    raise ValueError("Expecting LPAR before parameters!")
+            else:
+                raise ValueError("Expecting function name!")
+        return funcScript
+
+    @ staticmethod
     def parseBlock():
         if(Parser.tokens.actual.type == "LKEY"):
             Parser.tokens.selectNext()
@@ -771,7 +960,7 @@ class Parser:
         else:
             raise ValueError("Expecting LKEY!")
 
-    @staticmethod
+    @ staticmethod
     def parseCommand():
         order = NoOp(None)
         if(Parser.tokens.actual.type == "TIPO"):
@@ -789,19 +978,31 @@ class Parser:
             else:
                 raise ValueError("Expecting a variable!")
         elif(Parser.tokens.actual.type == "IDENT"):
-            variavel = Parser.tokens.actual.value
+            nome = Parser.tokens.actual.value
             Parser.tokens.selectNext()
             if(Parser.tokens.actual.type == "RECEBE"):
                 Parser.tokens.selectNext()
                 orexp = Parser.parseOrexpr()
-                order = Atribuicao("RECEBE", [variavel, orexp])
+                order = Atribuicao("RECEBE", [nome, orexp])
                 if(Parser.tokens.actual.type == "ENDLINE"):
                     Parser.tokens.selectNext()
                     return order
                 else:
                     raise ValueError("Expecting PONTO VIRGULA!")
+            elif(Parser.tokens.actual.type == "LPAR"):
+                Parser.tokens.selectNext()
+                parameters = [nome]
+                while(Parser.tokens.actual.type != "RPAR"):
+                    parameters.append(Parser.parseOrexpr())
+                    if(Parser.tokens.actual.type == "VIRGULA"):
+                        Parser.tokens.selectNext()
+                order = FuncCall("FCALL", parameters)
+                Parser.tokens.selectNext()
+                if(Parser.tokens.actual.type == "ENDLINE"):
+                    Parser.tokens.selectNext()
+                    return order
             else:
-                raise ValueError("Expecting an RECEBE!")
+                raise ValueError("Expecting um RECEBE ou LPAR!")
         elif(Parser.tokens.actual.type == "PRINT"):
             Parser.tokens.selectNext()
             if(Parser.tokens.actual.type == "LPAR"):
@@ -819,6 +1020,15 @@ class Parser:
                     raise ValueError("Expecting a RPAR!")
             else:
                 raise ValueError("Expecting an LPAR!")
+        elif(Parser.tokens.actual.type == "RETURN"):
+            Parser.tokens.selectNext()
+            orexp = Parser.parseOrexpr()
+            order = Return("RETURN", [orexp])
+            if(Parser.tokens.actual.type == "ENDLINE"):
+                Parser.tokens.selectNext()
+                return order
+            else:
+                raise ValueError("Expecting PONTO VIRGULA!")
         elif(Parser.tokens.actual.type == "WHILE"):
             Parser.tokens.selectNext()
             if(Parser.tokens.actual.type == "LPAR"):
@@ -862,7 +1072,7 @@ class Parser:
             Parser.tokens.selectNext()
             return order
 
-    @staticmethod
+    @ staticmethod
     def parseOrexpr():
         operadores = ["OR"]
 
@@ -874,12 +1084,12 @@ class Parser:
                 resultAndexpr = BinOp(
                     "OR", [resultAndexpr, Parser.parseAndexpr()])
 
-        if Parser.tokens.actual.type == "ENDLINE" or Parser.tokens.actual.type == "RPAR":
+        if Parser.tokens.actual.type == "ENDLINE" or Parser.tokens.actual.type == "RPAR" or Parser.tokens.actual.type == "VIRGULA":
             return resultAndexpr
         else:
             raise ValueError
 
-    @staticmethod
+    @ staticmethod
     def parseAndexpr():
         operadores = ["AND"]
 
@@ -893,7 +1103,7 @@ class Parser:
 
         return resultEqexpr
 
-    @staticmethod
+    @ staticmethod
     def parseEqexpr():
         operadores = ["EQUAL"]
 
@@ -907,7 +1117,7 @@ class Parser:
 
         return resultRelexpr
 
-    @staticmethod
+    @ staticmethod
     def parseRelexpr():
         operadores = ["MAIOR", "MENOR"]
 
@@ -926,7 +1136,7 @@ class Parser:
 
         return resultExpression
 
-    @staticmethod
+    @ staticmethod
     def parseExpression():
         operadores = ["PLUS", "MINUS"]
 
@@ -943,7 +1153,7 @@ class Parser:
 
         return resultTerm
 
-    @staticmethod
+    @ staticmethod
     def parseTerm():
         operadores = ["TIMES", "OVER"]
 
@@ -962,7 +1172,7 @@ class Parser:
 
         return resultFactor
 
-    @staticmethod
+    @ staticmethod
     def parseFactor():
         if(Parser.tokens.actual.type == "INT"):
             resultFactor = Parser.tokens.actual.value
@@ -992,7 +1202,21 @@ class Parser:
         elif(Parser.tokens.actual.type == "IDENT"):
             resultFactor = Parser.tokens.actual.value
             Parser.tokens.selectNext()
-            return Identific(resultFactor)
+            if(Parser.tokens.actual.type == "LPAR"):
+                Parser.tokens.selectNext()
+                parameters = []
+                while(Parser.tokens.actual.type != "RPAR"):
+                    parameters.append(Parser.parseOrexpr())
+                    if(Parser.tokens.actual.type == "RPAR"):
+                        break
+                    if(Parser.tokens.actual.type == "VIRGULA"):
+                        Parser.tokens.selectNext()
+                order = FuncCall(resultFactor, parameters)
+                Parser.tokens.selectNext()
+                return order
+            else:
+                return Identific(resultFactor)
+
         elif(Parser.tokens.actual.type == "READLINE"):
             Parser.tokens.selectNext()
             if(Parser.tokens.actual.type == "LPAR"):
@@ -1016,15 +1240,16 @@ class Parser:
         else:
             raise ValueError
 
-    @staticmethod
+    @ staticmethod
     def run(origin):
         Parser.tokens = Tokenizer(PrePro.filter(origin))
-        statements = Parser.parseBlock()
-        statements.Evaluate()
+        functions = Parser.parseFunctions()
+        dictTeste = {}
+        functions.Evaluate(dictTeste)
 
 
 class PrePro:
-    @staticmethod
+    @ staticmethod
     def filter(arg):
         new_arg = re.sub(r"\/\*.*?\*\/", " ", arg)
         return new_arg
@@ -1032,27 +1257,39 @@ class PrePro:
 
 class SymbolTable:
     # GETTER
-    @staticmethod
-    def getter(key):
-        return dictGlobal[key][0]
+    @ staticmethod
+    def getter(dictTable, key):
+        return dictTable[key]
 
     # SETTER TYPE
-    @staticmethod
-    def setterType(key, value=None, type_=None):
-        dictGlobal[key] = [value, type_]
+    @ staticmethod
+    def setterType(dictTable, key, value=None, type_=None):
+        dictTable[key] = [value, type_]
 
     # SETTER VALUE
-    @staticmethod
-    def setterValue(key, value):
-        if dictGlobal[key][1] == "bool":
-            dictGlobal[key][0] = int(bool(value))
-        elif dictGlobal[key][1] == "int":
-            dictGlobal[key][0] = int(value)
-        elif dictGlobal[key][1] == "string":
-            dictGlobal[key][0] = value
+    @ staticmethod
+    def setterValue(dictTable, key, value):
+        if dictTable[key][1] == "bool":
+            dictTable[key][0] = int(bool(value))
+        elif dictTable[key][1] == "int":
+            dictTable[key][0] = int(value)
+        elif dictTable[key][1] == "string":
+            dictTable[key][0] = value
+
+
+class FuncTable:
+    # GETTER
+    @ staticmethod
+    def getter(key):
+        return funcGlobal[key]
+
+    # SETTER
+    @ staticmethod
+    def setter(key, args=None, type_=None, body=None):
+        funcGlobal[key] = [args, type_, body]
 
 
 if __name__ == "__main__":
-    # with open("./teste000.c", "r") as f:
-    with open(sys.argv[1], "r") as f:
+    with open("./teste000.c", "r") as f:
+        # with open(sys.argv[1], "r") as f:
         Parser.run(f.read())
