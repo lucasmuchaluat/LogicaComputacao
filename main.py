@@ -153,11 +153,12 @@ class FuncDec(Node):
         funcName = self.children[1]
         fungArgs = self.children[2]
         funcBody = self.children[3]
-        try:
-            FuncTable.getter(funcName)
-        except:
+        if funcName not in funcGlobal.keys():
             FuncTable.setter(key=funcName, args=fungArgs,
                              type_=funcType, body=funcBody)
+        else:
+            raise ValueError(
+                "Erro: ja foi declarada funcao com este identificador")
 
 
 class FuncCall(Node):
@@ -182,16 +183,16 @@ class FuncCall(Node):
                 SymbolTable.setterType(funcTable, args[i][1], type_=args[i][0])
                 SymbolTable.setterValue(funcTable, args[i][1], value)
             body.Evaluate(funcTable)
-            try:
-                functReturn = SymbolTable.getter(funcTable, "return")[0]
-                if(type_ == "int"):
-                    return int(functReturn)
-                elif(type_ == "bool"):
-                    return bool(int(functReturn == "True"))
-                elif(type_ == "string"):
-                    return str(functReturn)
-            except:
-                return
+            returnValue = SymbolTable.getter(funcTable, "return")[0]
+            returnType = SymbolTable.getter(funcTable, "return")[1]
+            if returnType != type_:
+                raise ValueError("Error: tipo de retorno")
+            if(type_ == "int"):
+                return int(returnValue)
+            elif(type_ == "bool"):
+                return bool(int(returnValue == "True"))
+            elif(type_ == "string"):
+                return str(returnValue)
 
 
 class Return(Node):
@@ -927,6 +928,9 @@ class Parser:
                                     break
                                 if(Parser.tokens.actual.type == "VIRGULA"):
                                     Parser.tokens.selectNext()
+                                    if(Parser.tokens.actual.type == "RPAR"):
+                                        raise ValueError(
+                                            "Erro: virgula sem novo parametro")
                                 else:
                                     raise ValueError(
                                         "Expecting virgula between parameters!")

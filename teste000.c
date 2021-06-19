@@ -1,15 +1,16 @@
 
+/*Error: tipo de retorno*/
+
 int soma(int x, int y)
 {
     int res;
     res = x + y;
-    return res;
+    return "somei";
 }
 
 int main()
 {
-    int x;
-    soma(3, 5); /*Ok fazer isso*/
-    x = soma(3, 5);
+    string x;
+    x = soma(3, 2);
     println(x);
 }
