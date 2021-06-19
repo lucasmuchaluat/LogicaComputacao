@@ -187,9 +187,6 @@ class FuncCall(Node):
                 returnValue = SymbolTable.getter(funcTable, "return")[0]
             except:
                 return
-            returnType = SymbolTable.getter(funcTable, "return")[1]
-            if returnType != type_:
-                raise ValueError("Error: tipo de retorno")
             if(type_ == "int"):
                 return int(returnValue)
             elif(type_ == "bool"):
