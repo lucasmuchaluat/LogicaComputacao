@@ -183,7 +183,10 @@ class FuncCall(Node):
                 SymbolTable.setterType(funcTable, args[i][1], type_=args[i][0])
                 SymbolTable.setterValue(funcTable, args[i][1], value)
             body.Evaluate(funcTable)
-            returnValue = SymbolTable.getter(funcTable, "return")[0]
+            try:
+                returnValue = SymbolTable.getter(funcTable, "return")[0]
+            except:
+                return
             returnType = SymbolTable.getter(funcTable, "return")[1]
             if returnType != type_:
                 raise ValueError("Error: tipo de retorno")
