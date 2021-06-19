@@ -943,6 +943,12 @@ class Parser:
                     vardecChildren.append(argumentos)
                     Parser.tokens.selectNext()
                     funcBody = Parser.parseCommand()
+                    if(Parser.tokens.actual.type != "TIPO" and Parser.tokens.actual.type != "EOF"):
+                        commandList = []
+                        while(Parser.tokens.actual.type != "TIPO" and Parser.tokens.actual.type != "EOF"):
+                            order = Parser.parseCommand()
+                            commandList.append(order)
+                        funcBody = NodeBlock("STAT", commandList)
                     vardecChildren.append(funcBody)
                     funcScript = FuncDec("FUNCTION", vardecChildren)
                 else:
