@@ -9,13 +9,25 @@ Repositório para disciplina Lógica da Computação 2021.1
 
 O projeto consiste em construir um programa que recebe como argumento uma cadeia de operações de números inteiros de múltiplos dígitos as realiza. 
 
-Para rodá-lo, basta inserir as operações a serem realizadas em um ```arquivo.c``` a sua escolha. Ele pode conter múltiplas expressões (soma, multiplicação, parênteses, comentários, etc), sem aspas, disposta entre linhas separadas por ";". A linguagem suporta identificadores (atribuições de variáveis) e prints. Segue exemplo abaixo:
+Para rodá-lo, basta inserir as operações a serem realizadas em um ```arquivo.c``` a sua escolha. Ele pode conter múltiplas expressões (soma, multiplicação, parênteses, comentários, etc), sem aspas, disposta entre linhas separadas por ";". A linguagem suporta funções, identificadores (atribuições de variáveis), prints e inputs. Segue exemplo abaixo:
 
 ```
-a = 2;
-b = a + 3; /*commentario*/
-b = b - 3;
-println /*comentario*/ ((b + /*comentario*/ 1) * 2);
+/*comentario*/
+int soma(int x, int y) {
+  int a;
+  a = x + y;
+  println(a);
+  return a;
+}
+
+int main() {
+  int a;
+  int b;
+  a = 3;
+  b = soma(a, 4);
+  println(a);
+  println(b);
+}
 ```
 
 Feito isso, é possível chamar o programa passando o nome do arquivo via linha de comando. Por exemplo:
