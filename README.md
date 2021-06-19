@@ -57,4 +57,4 @@ x = (3+2)/5 /* comentário */
 
 ## Diagrama Sintático
 
-![alt text](https://raw.githubusercontent.com/lucasmuchaluat/LogicaComputacao/master/DiagramaSintatico.png?token=AJGGNGRWMKEYQHK6MMNZ3CDAVWHT2)
+![alt text](./DiagramaSintatico.png)
